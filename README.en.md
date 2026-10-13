@@ -102,7 +102,7 @@ No build tools or backend servers are required. Hike Web Studio runs as a pure s
 
 ```bash
 # Clone the repository
-git clone https://github.com/hike-lang/hike-web-studio.git
+git clone https://github.com/Kinoshita-Keita3/hike-web-studio.git
 cd hike-web-studio
 
 # Serve using any local HTTP static server (e.g., npx serve, python http.server)

@@ -100,7 +100,7 @@ hike-web-studio/
 
 ```bash
 # リポジトリのクローン
-git clone https://github.com/hike-lang/hike-web-studio.git
+git clone https://github.com/Kinoshita-Keita3/hike-web-studio.git
 cd hike-web-studio
 
 # 任意のローカルWebサーバーで配信 (例: npx serve, python http.server など)
