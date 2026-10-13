@@ -1,0 +1,39 @@
+// 練習モジュール 02: デモ Web API レスポンス解析
+package main
+
+import "fmt"
+
+type HttpResponse struct {
+    statusCode int32
+    contentLen int32
+    isSuccess  bool
+}
+
+func ParseApiResponse(status int32, payloadLen int32) HttpResponse {
+    var res HttpResponse
+    res.statusCode = status
+    res.contentLen = payloadLen
+    if status >= 200 && status < 300 {
+        res.isSuccess = true
+    } else {
+        res.isSuccess = false
+    }
+    return res
+}
+
+func main() int32 {
+    fmt.Println("=== Hike Web API Parser Practice ===")
+    
+    // Web API レスポンス（HTTP 200 OK, 1024バイト）の解析
+    res := ParseApiResponse(200, 1024)
+    
+    fmt.Printf("HTTP Status: %d\n", res.statusCode)
+    fmt.Printf("Payload Length: %d bytes\n", res.contentLen)
+    
+    if res.isSuccess {
+        fmt.Println("API Status: SUCCESS (200 OK)")
+        return 0
+    }
+    fmt.Println("API Status: FAILED")
+    return 1
+}

@@ -1,0 +1,21 @@
+// Hike共通標準モジュール: I/O ヘルパー
+package io
+
+type Reader interface {
+    Read(p []byte) (int32, error)
+}
+
+type Writer interface {
+    Write(p []byte) (int32, error)
+}
+
+type Buffer struct {
+    data [512]byte
+    size int32
+}
+
+func NewBuffer() Buffer {
+    var b Buffer
+    b.size = 0
+    return b
+}

@@ -1,0 +1,33 @@
+// 練習モジュール 03: バイナリ・ストリーム暗号/加工処理
+package main
+
+import "fmt"
+
+type StreamProcessor struct {
+    bytesProcessed int32
+    checksum       uint32
+}
+
+func (sp *StreamProcessor) ProcessChunk(data [16]byte) {
+    for i := 0; i < 16; i++ {
+        sp.checksum += uint32(data[i])
+        sp.bytesProcessed++
+    }
+}
+
+func main() int32 {
+    fmt.Println("=== Hike Binary Stream Processor ===")
+    
+    var sp StreamProcessor
+    var dummyChunk [16]byte
+    
+    for i := 0; i < 16; i++ {
+        dummyChunk[i] = byte(i * 3 + 1)
+    }
+    
+    sp.ProcessChunk(dummyChunk)
+    
+    fmt.Printf("Processed Bytes: %d\n", sp.bytesProcessed)
+    fmt.Printf("Computed Checksum: %d\n", sp.checksum)
+    return int32(sp.checksum)
+}

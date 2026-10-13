@@ -1,0 +1,36 @@
+// 練習モジュール 01: 入出力 (I/O) と文字列バッファ処理
+package main
+
+import (
+    "fmt"
+    "io"
+)
+
+type BufferIO struct {
+    readPos  int32
+    writePos int32
+    buffer   [256]byte
+}
+
+func (b *BufferIO) WriteString(s string) int32 {
+    bytes := []byte(s)
+    var count int32 = 0
+    for i := 0; i < len(bytes); i++ {
+        if b.writePos < 256 {
+            b.buffer[b.writePos] = bytes[i]
+            b.writePos++
+            count++
+        }
+    }
+    return count
+}
+
+func main() int32 {
+    fmt.Println("=== Hike I/O Practice Module ===")
+    
+    var buf BufferIO
+    buf.WriteString("Hello, Hike WASM I/O!")
+    
+    fmt.Printf("Buffer Written Bytes: %d\n", buf.writePos)
+    return buf.writePos
+}

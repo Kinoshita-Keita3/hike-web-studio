@@ -1,0 +1,19 @@
+// Hike共通標準モジュール: Web API モックインターフェース
+package mock_web_api
+
+type ApiRequest struct {
+    method string
+    url    string
+}
+
+type ApiResponse struct {
+    status int32
+    body   string
+}
+
+func FetchMock(url string) ApiResponse {
+    var res ApiResponse
+    res.status = 200
+    res.body = "{\"status\": \"ok\", \"message\": \"Mock Web API response from WASM\"}"
+    return res
+}

@@ -1,0 +1,19 @@
+{
+  "name": "hike-web-studio",
+  "version": "0.1.0",
+  "description": "In-browser compilation and debugging studio for Hike programming language",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx serve ."
+  },
+  "keywords": [
+    "hike",
+    "wasm",
+    "webassembly",
+    "compiler",
+    "debugger",
+    "playground"
+  ],
+  "author": "HIKE Project / HIKE contributors",
+  "license": "MIT"
+}

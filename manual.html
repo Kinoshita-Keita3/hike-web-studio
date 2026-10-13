@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hike Web Studio - 取扱説明書 & 全機能マニュアル</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body {
+      overflow-y: auto;
+      height: auto;
+      min-height: 100vh;
+      padding: 24px;
+      background: radial-gradient(circle at 50% 0%, #202035 0%, #181825 100%);
+    }
+
+    .doc-container {
+      max-width: 980px;
+      margin: 0 auto 50px auto;
+      background: var(--bg-panel);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 32px 40px;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+    }
+
+    .doc-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 18px;
+      margin-bottom: 24px;
+    }
+
+    .doc-header h1 {
+      font-size: 1.3rem;
+      color: var(--accent-blue);
+      font-weight: 600;
+      letter-spacing: 0.3px;
+    }
+
+    .nav-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    /* モダンなリンクカードデザイン */
+    .modern-link-card {
+      background: linear-gradient(135deg, rgba(37, 37, 56, 0.8) 0%, rgba(30, 30, 46, 0.9) 100%);
+      border: 1px solid rgba(137, 180, 250, 0.3);
+      border-radius: 10px;
+      padding: 18px 24px;
+      margin-bottom: 28px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+      transition: all 0.2s ease;
+    }
+
+    .modern-link-card:hover {
+      border-color: var(--accent-blue);
+      box-shadow: 0 6px 26px rgba(137, 180, 250, 0.2);
+      transform: translateY(-2px);
+    }
+
+    .link-card-left {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .link-card-title {
+      color: var(--accent-blue);
+      font-size: 1.02rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .link-card-desc {
+      color: var(--text-muted);
+      font-size: 0.83rem;
+    }
+
+    .badge-pills {
+      display: flex;
+      gap: 6px;
+      margin-top: 2px;
+    }
+
+    .pill-tag {
+      background: var(--bg-main);
+      border: 1px solid var(--border-color);
+      color: var(--accent-yellow);
+      font-size: 0.7rem;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-family: var(--font-code);
+    }
+
+    .modern-btn-link {
+      background: var(--accent-blue);
+      color: #11111b;
+      font-weight: 600;
+      font-size: 0.85rem;
+      padding: 8px 18px;
+      border-radius: 6px;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+    }
+
+    .modern-btn-link:hover {
+      background: #b4befe;
+      box-shadow: 0 0 14px rgba(180, 190, 254, 0.5);
+    }
+
+    .demo-wrapper {
+      background: var(--bg-main);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 30px;
+    }
+
+    .demo-wrapper img {
+      width: 100%;
+      height: auto;
+      display: block;
+      border-radius: 6px;
+    }
+
+    .doc-section {
+      margin-bottom: 36px;
+    }
+
+    .doc-section h2 {
+      font-size: 1.1rem;
+      color: var(--accent-yellow);
+      margin-bottom: 16px;
+      border-left: 3px solid var(--accent-yellow);
+      padding-left: 10px;
+      font-weight: 600;
+    }
+
+    .feature-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 14px;
+    }
+
+    .feature-card {
+      background: var(--bg-sub);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 16px;
+      transition: transform 0.15s ease, border-color 0.15s ease;
+    }
+
+    .feature-card:hover {
+      border-color: var(--accent-blue);
+      transform: translateY(-2px);
+    }
+
+    .feature-card h4 {
+      color: var(--accent-green);
+      font-size: 0.92rem;
+      margin-bottom: 6px;
+      font-weight: 600;
+    }
+
+    .feature-card p {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      line-height: 1.55;
+    }
+
+    /* ライトモード (Light Theme) 視認性カスタマイズ */
+    [data-theme="light"] body {
+      background: #e9ecef;
+      color: #1f2937;
+    }
+
+    [data-theme="light"] .doc-container {
+      background: #ffffff;
+      border-color: #ced4da;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+    }
+
+    [data-theme="light"] .modern-link-card {
+      background: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    }
+
+    [data-theme="light"] .link-card-title {
+      color: #1d4ed8;
+    }
+
+    [data-theme="light"] .link-card-desc {
+      color: #4b5563;
+    }
+
+    [data-theme="light"] .pill-tag {
+      background: #e2e8f0;
+      border-color: #cbd5e1;
+      color: #b45309;
+      font-weight: 600;
+    }
+
+    [data-theme="light"] .demo-wrapper {
+      background: #f1f5f9;
+      border-color: #cbd5e1;
+    }
+
+    [data-theme="light"] .doc-section h2 {
+      color: #b45309;
+      border-left-color: #d97706;
+    }
+
+    [data-theme="light"] .feature-card {
+      background: #f8fafc;
+      border-color: #cbd5e1;
+    }
+
+    [data-theme="light"] .feature-card h4 {
+      color: #15803d;
+      font-weight: 600;
+    }
+
+    [data-theme="light"] .feature-card p {
+      color: #374151;
+    }
+
+    [data-theme="light"] .alert-box.warn-alert {
+      background: #fffbeb;
+      border-color: #f59e0b;
+      color: #92400e;
+    }
+
+    [data-theme="light"] .alert-box.warn-alert h3 {
+      color: #b45309;
+    }
+
+    [data-theme="light"] .alert-box.success-alert {
+      background: #f0fdf4;
+      border-color: #22c55e;
+      color: #166534;
+    }
+
+    [data-theme="light"] .alert-box.danger-alert {
+      background: #fef2f2;
+      border-color: #ef4444;
+      color: #991b1b;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="doc-container">
+    <!-- ヘッダーナビゲーション -->
+    <header class="doc-header">
+      <h1 data-i18n="doc_title">Hike Web Studio 取扱説明書 & 全機能マニュアル</h1>
+      <div class="nav-actions">
+        <button id="btnThemeToggleDoc" class="btn-theme">🌙 ダーク</button>
+        <button id="btnLangToggleDoc" class="btn-lang">🌐 JP / EN</button>
+        <a href="index.html" class="btn-primary" style="text-decoration: none; padding: 6px 14px; font-size: 0.82rem;" data-i18n="btn_back">← Studio エディタに戻る</a>
+      </div>
+    </header>
+
+    <!-- モダンな公式リファレンスリンクカード -->
+    <div class="modern-link-card">
+      <div class="link-card-left">
+        <div class="link-card-title" data-i18n="hike_card_title">Hike プログラミング言語 (Hike Language) 公式リファレンス</div>
+        <div class="link-card-desc" data-i18n="hike_card_desc">Zero-GC / 超高速WASMネイティブコンパイル仕様のシステム言語</div>
+        <div class="badge-pills">
+          <span class="pill-tag">Zero-GC</span>
+          <span class="pill-tag">WASM Native</span>
+          <span class="pill-tag">Zero Glue-Code</span>
+        </div>
+      </div>
+      <div>
+        <a href="../hike-lang/" target="_blank" class="modern-btn-link" data-i18n="hike_card_btn">公式ドキュメントを見る →</a>
+      </div>
+    </div>
+
+    <!-- モダンな Git リポジトリ リンクカード -->
+    <div class="modern-link-card">
+      <div class="link-card-left">
+        <div class="link-card-title" data-i18n="git_card_title">Hike Web Studio GitHub リポジトリ (Git ページ)</div>
+        <div class="link-card-desc" data-i18n="git_card_desc">ソースコード、WASMコアモジュール、およびオープンソース Git リポジトリ</div>
+        <div class="badge-pills">
+          <span class="pill-tag">Open Source</span>
+          <span class="pill-tag">MIT License</span>
+          <span class="pill-tag">Git Repository</span>
+        </div>
+      </div>
+      <div>
+        <a href="https://github.com/hike-lang/hike-web-studio" target="_blank" class="modern-btn-link" style="background: var(--accent-purple);" data-i18n="git_card_btn">Git ページを見る →</a>
+      </div>
+    </div>
+
+    <!-- 視覚的アニメーションデモ (GIF録画) -->
+    <div class="doc-section">
+      <h2 data-i18n="sec0_title">1. 視覚的アニメーションデモ (Visual Walkthrough Demo)</h2>
+      <p style="margin-bottom: 12px;" data-i18n="sec0_desc">ステップデバッグ、多行メモリ監視、壁スプリッター移動、自動たたみの動作デモGIFアニメーションです。</p>
+      <div class="demo-wrapper">
+        <img src="assets/usage_demo.gif" alt="Hike Web Studio Usage Demo Animated GIF">
+      </div>
+    </div>
+
+    <!-- 全機能の一覧解説 (11大機能) -->
+    <div class="doc-section">
+      <h2 data-i18n="sec1_title">2. 機能リファレンス (11 大機能)</h2>
+      
+      <div class="feature-grid">
+        <div class="feature-card">
+          <h4 data-i18n="f1_t">1. WASM ビルド & 高速実行</h4>
+          <p data-i18n="f1_d">JSグルーコードを一切介さず、ブラウザ内のHike WASMコアが瞬時にAST解析とLLVM IR/Wasmバイナリを生成・実行します。</p>
+        </div>
+
+        <div class="feature-card">
+          <h4 data-i18n="f2_t">2. ステップデバッガ & ブレークポイント (F5/F10)</h4>
+          <p data-i18n="f2_d">行番号クリックで🔴ブレークポイントを設置。F10で1行進み、F5で次のブレークポイントまでスキップ実行します。</p>
+        </div>
+
+        <div class="feature-card">
+          <h4 data-i18n="f3_t">3. 多行リニアメモリダンプ & 変数名シンボル表示</h4>
+          <p data-i18n="f3_d">「1行/2行/3行表示」を動的変更可能。i, total などの変数名ラベルがメモリセル（0x0000）に表示され、16進/10進を切替可能。</p>
+        </div>
+
+        <div class="feature-card">
+          <h4 data-i18n="f4_t">4. 分割壁（スプリッター）のドラッグ移動 & 十字交差点</h4>
+          <p data-i18n="f4_d">垂直壁（左右）・水平壁（上下）をドラッグリサイズ。中央の円形十字ハンドルで4枠を同時に2D自由移動できます。</p>
+        </div>
+
+        <div class="feature-card">
+          <h4 data-i18n="f5_t">5. 枠のドラッグ＆ドロップ配置入れ替え (⋮⋮)</h4>
+          <p data-i18n="f5_d">各枠ヘッダーの ⋮⋮ ハンドルをドラッグ＆ドロップすることで、枠の表示位置を相互に自由入れ替え可能です。</p>
+        </div>
+
+        <div class="feature-card">
+          <h4 data-i18n="f6_t">6. 枠の自動たたみ & 手動たたみ (➖/➕)</h4>
+          <p data-i18n="f6_d">壁を端に寄せて枠幅が一定（<14%）以下になると自動たたみ。ヘッダーの「➖/➕」ボタンやダブルクリックで手動たたみも可能。</p>
+        </div>
+
+        <div class="feature-card">
+          <h4 data-i18n="f7_t">7. 標準レイアウト復元</h4>
+          <p data-i18n="f7_d">画面右上の「レイアウト復元」ボタンを押すと、壁の比率（5:5）・枠の配置・折りたたみ状態を一括で初期標準表示に戻せます。</p>
+        </div>
+
+        <div class="feature-card">
+          <h4 data-i18n="f8_t">8. 3つの動作モード</h4>
+          <p data-i18n="f8_d">標準フリー記述、仮想 Auth / Storage / Code Scanner ノード連携通信、アドバンスド（-O3, -g, 外部通信許可）の3モードを搭載。</p>
+        </div>
+
+        <div class="feature-card">
+          <h4 data-i18n="f9_t">9. 5つの実践プログラミング演習</h4>
+          <p data-i18n="f9_d">総和計算、配列探索、XOR暗号化、Web APIパース、そしてStudio自身をセルフコンパイルする「演習5 (Studio自身)」コードを即座にロード。</p>
+        </div>
+
+        <div class="feature-card">
+          <h4 data-i18n="f10_t">10. WASM 安全ガイドライン</h4>
+          <p data-i18n="f10_d">Wasmサンドボックス分離、16MB (256 Wasm Pages) メモリ制限、無限ループを防ぐ10分間タイマー監視で安全デバッグを保証。</p>
+        </div>
+
+        <div class="feature-card">
+          <h4 data-i18n="f11_t">11. 日英バイリンガルUI切替</h4>
+          <p data-i18n="f11_d">ヘッダーの 🌐 JP / EN ボタンをクリックすると、UIラベル・コンソールログ・取説ページ全体が日本語/英語にリアルタイム切り替わります。</p>
+        </div>
+
+        <div class="feature-card">
+          <h4 data-i18n="f12_t">12. WASM & LLVM IR 構文ハイライト & 8列メモリ枠整列</h4>
+          <p data-i18n="f12_d">WASM (WAT) および LLVM IR 出力パネルにリアルタイムのカラー構文強調表示を標準搭載。多行メモリダンプは 8 カラム (+00〜+1C) 完全対応し、空の領域も崩れず枠付きで正確表示されます。</p>
+        </div>
+
+        <div class="feature-card" style="grid-column: span 2;">
+          <h4 data-i18n="f13_t">13. ドラッグ＆ドロップファイル読込 & WASM / WAT エクスポート</h4>
+          <p data-i18n="f13_d">PC上の .hike ファイルをエディタ上にドラッグ＆ドロップするだけで即時ロード。作成したソースコードの保存 (💾 保存) や、コンパイル済み WASM バイナリ (💾 WASM出力)、WAT テキスト (📜 WAT出力) のローカル出力が可能です。</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- WASM の安全性と動作原理 -->
+    <div class="doc-section">
+      <h2 data-i18n="sec2_title">3. WASM の安全性とセキュリティ境界・動作原理</h2>
+
+      <div class="alert-box success-alert" style="margin-top: 12px;">
+        <h3 data-i18n="s1_t">1. メモリ & CPU サンドボックスの隔離</h3>
+        <p data-i18n="s1_d">WebAssembly バイナリはブラウザの仮想マシン内で完全に隔離されて実行されます。ホスト PC のファイルシステムや OS 領域への直接アクセスは遮断され、範囲外参照発生時は WASM トラップで安全に停止します。</p>
+      </div>
+
+      <div class="alert-box warn-alert" style="margin-top: 10px;">
+        <h3 data-i18n="s2_t">2. 16MB (256 Pages) メモリ上限制限</h3>
+        <p data-i18n="s2_d">Wasm リニアメモリの最大サイズを 16MB に制限しており、大量のメモリ確保が発生してもブラウザがメモリ不足でクラッシュすることを防止します。</p>
+      </div>
+
+      <div class="alert-box danger-alert" style="margin-top: 10px;">
+        <h3 data-i18n="s3_t">3. 10分間タイマー監視ガード (無限ループ保護)</h3>
+        <p data-i18n="s3_d">ステップ実行時にコードが無限ループに陥った場合でも、非同期タイマー監視ガードが作動し、10分間経過すると安全に実行スレッドを自動遮断します。</p>
+      </div>
+
+      <div class="alert-box warn-alert" style="margin-top: 10px;">
+        <h3 data-i18n="s4_t">4. 外部ネットワーク通信の制御ポリシー</h3>
+        <p data-i18n="s4_d">標準モードおよび仮想通信サーバーモードでは、外部 Web サーバーへの通信はブロックされます。アドバンスドモードで「外部通信許可」をチェックした場合のみ許可されます。</p>
+      </div>
+    </div>
+
+    <!-- ページフッター -->
+    <div style="text-align: center; margin-top: 30px; padding-top: 16px; border-top: 1px solid var(--border-color); color: var(--text-muted); font-size: 0.78rem;">
+      Hike Web Studio Documentation
+    </div>
+  </div>
+
+  <script>
+    let currentDocLang = 'ja';
+
+    const docI18n = {
+      ja: {
+        doc_title: "Hike Web Studio 取扱説明書 & 全機能マニュアル",
+        btn_back: "← Studio エディタに戻る",
+        hike_card_title: "Hike プログラミング言語 (Hike Language) 公式リファレンス",
+        hike_card_desc: "Zero-GC / 超高速WASMネイティブコンパイル仕様のシステム言語",
+        hike_card_btn: "公式ドキュメントを見る →",
+        git_card_title: "📦 Hike Web Studio GitHub リポジトリ (Git ページ)",
+        git_card_desc: "ソースコード、WASMコアモジュール、およびオープンソース Git リポジトリ",
+        git_card_btn: "Git ページを見る →",
+        sec0_title: "1. 視覚的アニメーションデモ (Visual Walkthrough Demo)",
+        sec0_desc: "ステップデバッグ、多行メモリ監視、壁スプリッター移動、自動たたみの動作デモGIFアニメーションです。",
+        sec1_title: "2. 機能リファレンス (13 大機能)",
+        f1_t: "1. WASM ビルド & 高速実行",
+        f1_d: "JSグルーコードを一切介さず、ブラウザ内のHike WASMコアが瞬時にAST解析とLLVM IR/Wasmバイナリを生成・実行します。",
+        f2_t: "2. ステップデバッガ & ブレークポイント (F5/F10)",
+        f2_d: "行番号クリックで🔴ブレークポイントを設置。F10で1行進み、F5で次のブレークポイントまでスキップ実行します。",
+        f3_t: "3. 多行リニアメモリダンプ & 変数名シンボル表示",
+        f3_d: "「1行/2行/3行表示」を動的変更可能。i, total などの変数名ラベルがメモリセル（0x0000）に表示され、16進/10進を切替可能。",
+        f4_t: "4. 分割壁（スプリッター）のドラッグ移動 & 十字交差点",
+        f4_d: "垂直壁（左右）・水平壁（上下）をドラッグリサイズ。中央の円形十字ハンドルで4枠を同時に2D自由移動できます。",
+        f5_t: "5. 枠のドラッグ＆ドロップ配置入れ替え (⋮⋮)",
+        f5_d: "各枠ヘッダーの ⋮⋮ ハンドルをドラッグ＆ドロップすることで、枠の表示位置を相互に自由入れ替え可能です。",
+        f6_t: "6. 枠の自動たたみ & 手動たたみ (➖/➕)",
+        f6_d: "壁を端に寄せて枠幅が一定（<14%）以下になると自動たたみ。ヘッダーの「➖/➕」ボタンやダブルクリックで手動たたみも可能。",
+        f7_t: "7. 標準レイアウト復元",
+        f7_d: "画面右上の「レイアウト復元」ボタンを押すと、壁の比率（5:5）・枠の配置・折りたたみ状態を一括で初期標準表示に戻せます。",
+        f8_t: "8. 3つの動作モード",
+        f8_d: "標準フリー記述、仮想 Auth / Storage / Code Scanner ノード連携通信、アドバンスド（-O3, -g, 外部通信許可）の3モードを搭載。",
+        f9_t: "9. 5つの実践プログラミング演習",
+        f9_d: "総和計算、配列探索、XOR暗号化、Web APIパース、そしてStudio自身をセルフコンパイルする「演習5 (Studio自身)」コードを即座にロード。",
+        f10_t: "10. WASM 安全ガイドライン",
+        f10_d: "Wasmサンドボックス分離、16MB (256 Wasm Pages) メモリ制限、無限ループを防ぐ10分間タイマー監視で安全デバッグを保証。",
+        f11_t: "11. 日英バイリンガルUI切替",
+        f11_d: "ヘッダーの 🌐 JP / EN ボタンをクリックすると、UIラベル・コンソールログ・取説ページ全体が日本語/英語にリアルタイム切り替わります。",
+        f12_t: "12. WASM & LLVM IR 構文ハイライト & 8列メモリ枠整列",
+        f12_d: "WASM (WAT) および LLVM IR 出力パネルにリアルタイムのカラー構文強調表示を標準搭載。多行メモリダンプは 8 カラム (+00〜+1C) 完全対応し、空の領域も崩れず枠付きで正確表示されます。",
+        f13_t: "13. ドラッグ＆ドロップファイル読込 & WASM / WAT エクスポート",
+        f13_d: "PC上の .hike ファイルをエディタ上にドラッグ＆ドロップするだけで即時ロード。作成したソースコードの保存 (💾 保存) や、コンパイル済み WASM バイナリ (💾 WASM出力)、WAT テキスト (📜 WAT出力) のローカル出力が可能です。",
+        f14_t: "14. 幅10%以下の自動折りたたみ & 枠ナビ三点リーダー (⋮) メニュー化",
+        f14_d: "パネル境界をドラッグして幅/高さが10%以下になると自動的に折りたたまれます。画面やパネル幅が狭くなってナビボタンが並べなくなると、自動的に三点リーダー (⋮) アイコンへ畳まれ、クリックして選択メニューから各コマンドを呼び出せます。",
+        f15_t: "15. 自由な枠数レイアウト (4枠/3枠/2枠/1枠) & 枠ヘッダー直感表示セレクター",
+        f15_d: "標準の4枠 (2x2) に加え、(2, 1, 1) 仕様の 3枠 (左1:右2 / 上1:下2)、2枠 (左右/上下)、1枠 (全画面) の多極レイアウトを選択可能。各枠のヘッダータイトルから表示したいコンテンツ (エディタ/WASM/コンソール/メモリ) をワンクリックで直感的に切り替え・入れ替えできます。",
+        sec2_title: "3. WASM の安全性とセキュリティ境界・動作原理",
+        s1_t: "1. メモリ & CPU サンドボックスの隔離",
+        s1_d: "WebAssembly バイナリはブラウザの仮想マシン内で完全に隔離されて実行されます。ホスト PC のファイルシステムや OS 領域への直接アクセスは遮断され、範囲外参照発生時は WASM トラップで安全に停止します。",
+        s2_t: "2. 16MB (256 Pages) メモリ上限制限",
+        s2_d: "Wasm リニアメモリの最大サイズを 16MB に制限しており、大量のメモリ確保が発生してもブラウザがメモリ不足でクラッシュすることを防止します。",
+        s3_t: "3. 10分間タイマー監視ガード (無限ループ保護)",
+        s3_d: "ステップ実行時にコードが無限ループに陥った場合でも、非同期タイマー監視ガードが作動し、10分間経過すると安全に実行スレッドを自動遮断します。",
+        s4_t: "4. 外部ネットワーク通信の制御ポリシー",
+        s4_d: "標準モードおよび仮想通信サーバーモードでは、外部 Web サーバーへの通信はブロックされます。アドバンスドモードで「外部通信許可」をチェックした場合のみ許可されます。"
+      },
+      en: {
+        doc_title: "Hike Web Studio User Manual & Feature Guide",
+        btn_back: "← Back to Studio Editor",
+        hike_card_title: "Hike Programming Language Official Reference",
+        hike_card_desc: "A Zero-GC, ultra-fast WASM native systems programming language",
+        hike_card_btn: "View Official Specs →",
+        git_card_title: "📦 Hike Web Studio GitHub Repository (Git Page)",
+        git_card_desc: "Source code, WASM core modules, and open-source repository",
+        git_card_btn: "View Git Page →",
+        sec0_title: "1. Visual Walkthrough Demo",
+        sec0_desc: "Animated GIF demo of step debugging, multi-row memory dump, splitter wall drag, and auto-fold.",
+        sec1_title: "2. Full Feature Reference (13 Key Features)",
+        f1_t: "1. WASM Build & Fast Execution",
+        f1_d: "Directly compiles and runs Hike AST to LLVM IR / Wasm in-browser without JS-glue overhead.",
+        f2_t: "2. Step Debugger & Breakpoints (F5/F10)",
+        f2_d: "Click line numbers to set 🔴 breakpoints. Press F10 to step over lines, and F5 to skip directly to the next breakpoint.",
+        f3_t: "3. Multi-Row Memory Dump & Symbol Mapping",
+        f3_d: "Dynamic 1/2/3 row view toggles. Symbol labels (i, total) mapped directly onto offset memory cells (0x0000) with HEX/DEC modes.",
+        f4_t: "4. Splitter Wall Resizing & 2D Intersection Handle",
+        f4_d: "Drag vertical and horizontal splitter bars to resize. Use the center circular handle to resize all 4 quadrants simultaneously in 2D.",
+        f5_t: "5. Drag & Drop Panel Position Swapping (⋮⋮)",
+        f5_d: "Grab the ⋮⋮ handle on any panel header to drag and swap panel positions in the grid freely.",
+        f6_t: "6. Auto-Fold & Manual Panel Collapse (➖/➕)",
+        f6_d: "Panels auto-collapse into headers when resized under 14% width. Toggle manually using ➖/➕ buttons or header double-clicks.",
+        f7_t: "7. Restore Default Layout",
+        f7_d: "Click 'Restore Layout' in the header to instantly reset wall ratios (50:50), grid positions, and uncollapse all panels.",
+        f8_t: "8. Three Operation Modes",
+        f8_d: "Standard free playground, Virtual Server node Client (Auth/Storage/Scanner), and Advanced mode (-O3, -g, external fetch).",
+        f9_t: "9. Five Practice Programming Exercises",
+        f9_d: "Preloaded practice sets: Sum 1..N, Array Max, XOR Crypto, Web API Parser, and Exercise 5 (Studio self-host compiler).",
+        f10_t: "10. WASM Security & Sandbox Policy",
+        f10_d: "Complete VM sandbox isolation, 16MB (256 Wasm pages) memory limit guard, and 10-minute infinite loop timeout protection.",
+        f11_t: "11. Japanese / English Bilingual UI",
+        f11_d: "Click 🌐 JP / EN in the header to switch UI text, console output, and the entire documentation between Japanese and English in real time.",
+        f12_t: "12. WASM & LLVM IR Syntax Highlighting & 8-Column Memory Alignment",
+        f12_d: "Built-in syntax highlighting for WASM (WAT) and LLVM IR panels. Memory dump provides 8 aligned columns (+00 to +1C) with clean empty cell borders.",
+        f13_t: "13. Drag & Drop File Import & WASM / WAT Export",
+        f13_d: "Drag and drop local .hike files to load instantly. Easily save Hike source files (💾 Save) or export compiled WASM binary (💾 WASM Out) and WAT text (📜 WAT Out).",
+        f14_t: "14. Auto Collapse (≤10% Width) & Responsive Three-Dot (⋮) Menu",
+        f14_d: "Dragging panel splitters below 10% width/height auto-collapses the panel. When screen or panel header width is constrained, action buttons automatically collapse into a three-dot (⋮) dropdown menu.",
+        f15_t: "15. Flexible Layout Presets (4/3/2/1 Panels) & Intuitive Header Content Selector",
+        f15_d: "Choose between 4-panel (2x2), 3-panel (2, 1, 1: Left 1/Right 2 or Top 1/Bottom 2), 2-panel (Left/Right or Top/Bottom), and 1-panel (Full Editor) layouts. Change or swap panel contents (Editor, WASM, Console, Memory) in any frame directly from its header title dropdown.",
+        sec2_title: "3. WASM Security, Sandbox Policy & Principles",
+        s1_t: "1. Memory & CPU Sandbox Isolation",
+        s1_d: "WebAssembly binaries execute inside isolated VM sandboxes without access to host filesystems or OS APIs. Out-of-bounds access triggers a clean WASM trap.",
+        s2_t: "2. 16MB (256 Pages) Memory Limit Guard",
+        s2_d: "Linear Wasm memory is capped at 16MB to prevent memory exhaustion attacks or browser crashes.",
+        s3_t: "3. 10-Minute Timeout Guard (Infinite Loop Protection)",
+        s3_d: "An asynchronous timer monitor automatically interrupts execution threads if a loop runs past 10 minutes.",
+        s4_t: "4. External Network Restriction Policy",
+        s4_d: "External HTTP fetch calls are blocked by default, and allowed only when explicitly checked in Advanced Mode."
+      }
+    };
+
+    let currentDocTheme = localStorage.getItem('hike_studio_theme') || 'dark';
+
+    function applyDocTheme(theme) {
+      currentDocTheme = theme;
+      document.documentElement.setAttribute('data-theme', theme);
+      localStorage.setItem('hike_studio_theme', theme);
+      const btn = document.getElementById('btnThemeToggleDoc');
+      if (btn) {
+        btn.textContent = (theme === 'dark')
+          ? (currentDocLang === 'ja' ? '🌙 ダーク' : '🌙 Dark')
+          : (currentDocLang === 'ja' ? '☀️ ライト' : '☀️ Light');
+      }
+    }
+
+    function applyDocLanguage(lang) {
+      currentDocLang = lang;
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (docI18n[lang][key]) {
+          el.textContent = docI18n[lang][key];
+        }
+      });
+      applyDocTheme(currentDocTheme);
+    }
+
+    document.getElementById('btnLangToggleDoc').addEventListener('click', () => {
+      const nextLang = currentDocLang === 'ja' ? 'en' : 'ja';
+      applyDocLanguage(nextLang);
+    });
+
+    const btnThemeToggleDocEl = document.getElementById('btnThemeToggleDoc');
+    if (btnThemeToggleDocEl) {
+      btnThemeToggleDocEl.addEventListener('click', () => {
+        const nextTheme = currentDocTheme === 'dark' ? 'light' : 'dark';
+        applyDocTheme(nextTheme);
+      });
+    }
+
+    applyDocTheme(currentDocTheme);
+  </script>
+</body>
+</html>

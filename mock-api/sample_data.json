@@ -1,0 +1,13 @@
+{
+  "api_version": "1.0",
+  "status": "success",
+  "timestamp": 1758811400,
+  "data": {
+    "user_id": 4096,
+    "user_name": "Hike Developer",
+    "metrics": {
+      "wasm_execution_ms": 1.25,
+      "memory_allocated_kb": 64
+    }
+  }
+}

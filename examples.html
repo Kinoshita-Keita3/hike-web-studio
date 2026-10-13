@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hike Web Studio - 例題解説 & 教材活用ガイド</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body {
+      overflow-y: auto;
+      height: auto;
+      min-height: 100vh;
+      padding: 24px;
+      background: radial-gradient(circle at 50% 0%, #1e1e2e 0%, #11111b 100%);
+    }
+
+    .doc-container {
+      max-width: 1040px;
+      margin: 0 auto 50px auto;
+      background: var(--bg-panel);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 36px 44px;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+    }
+
+    .doc-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 20px;
+      margin-bottom: 28px;
+    }
+
+    .doc-header h1 {
+      font-size: 1.35rem;
+      color: var(--accent-blue);
+      font-weight: 700;
+      letter-spacing: 0.3px;
+    }
+
+    .nav-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    /* ヒーローカード: 教材としての狙い */
+    .hero-card {
+      background: linear-gradient(135deg, rgba(30, 41, 59, 0.9) 0%, rgba(15, 23, 42, 0.95) 100%);
+      border: 1px solid rgba(137, 180, 250, 0.35);
+      border-radius: 12px;
+      padding: 24px 28px;
+      margin-bottom: 32px;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
+    }
+
+    .hero-card h2 {
+      font-size: 1.15rem;
+      color: var(--accent-yellow);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .hero-card p {
+      font-size: 0.88rem;
+      color: #cdd6f4;
+      line-height: 1.7;
+      margin-bottom: 10px;
+    }
+
+    .merit-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 14px;
+      margin-top: 16px;
+    }
+
+    .merit-item {
+      background: var(--bg-sub);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 14px 16px;
+    }
+
+    .merit-item h4 {
+      font-size: 0.9rem;
+      color: var(--accent-green);
+      margin-bottom: 6px;
+      font-weight: 600;
+    }
+
+    .merit-item p {
+      font-size: 0.81rem;
+      color: var(--text-muted);
+      line-height: 1.55;
+      margin-bottom: 0;
+    }
+
+    /* 難易度マップテーブル */
+    .roadmap-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 36px;
+      font-size: 0.84rem;
+    }
+
+    .roadmap-table th {
+      background: var(--bg-sub);
+      color: var(--accent-blue);
+      padding: 10px 14px;
+      text-align: left;
+      border: 1px solid var(--border-color);
+      font-weight: 600;
+    }
+
+    .roadmap-table td {
+      padding: 10px 14px;
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+    }
+
+    .badge-diff {
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      display: inline-block;
+    }
+
+    .diff-1 { background: rgba(166, 227, 161, 0.2); color: #a6e3a1; border: 1px solid #a6e3a1; }
+    .diff-2 { background: rgba(137, 220, 235, 0.2); color: #89dceb; border: 1px solid #89dceb; }
+    .diff-3 { background: rgba(137, 180, 250, 0.2); color: #89b4fa; border: 1px solid #89b4fa; }
+    .diff-4 { background: rgba(250, 179, 135, 0.2); color: #fab387; border: 1px solid #fab387; }
+    .diff-5 { background: rgba(243, 139, 168, 0.2); color: #f38ba8; border: 1px solid #f38ba8; }
+
+    /* 各例題の詳細カード */
+    .ex-detail-card {
+      background: var(--bg-sub);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 22px 26px;
+      margin-bottom: 28px;
+      transition: border-color 0.2s ease;
+    }
+
+    .ex-detail-card:hover {
+      border-color: var(--accent-blue);
+    }
+
+    .ex-header-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+      border-bottom: 1px dashed var(--border-color);
+      padding-bottom: 10px;
+    }
+
+    .ex-header-bar h3 {
+      font-size: 1.05rem;
+      color: var(--accent-yellow);
+      font-weight: 600;
+      margin: 0;
+    }
+
+    .ex-section-title {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--accent-blue);
+      margin: 12px 0 6px 0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .ex-code-block {
+      background: #11111b;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 12px 16px;
+      font-family: var(--font-code);
+      font-size: 0.82rem;
+      color: #cdd6f4;
+      overflow-x: auto;
+      margin-bottom: 12px;
+      line-height: 1.45;
+      font-variant-ligatures: none !important;
+      -webkit-font-variant-ligatures: none !important;
+      font-feature-settings: "liga" 0, "calt" 0, "dlig" 0 !important;
+    }
+
+    .ex-desc-text {
+      font-size: 0.84rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+      margin-bottom: 8px;
+    }
+
+    .point-box {
+      background: rgba(137, 180, 250, 0.08);
+      border-left: 3px solid var(--accent-blue);
+      padding: 8px 12px;
+      margin-top: 10px;
+      font-size: 0.81rem;
+      color: #bac2de;
+      border-radius: 0 6px 6px 0;
+    }
+
+    /* ライトテーマ用調整 */
+    [data-theme="light"] body {
+      background: #e2e8f0;
+      color: #1e293b;
+    }
+    [data-theme="light"] .doc-container {
+      background: #ffffff;
+      border-color: #cbd5e1;
+    }
+    [data-theme="light"] .hero-card {
+      background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+      border-color: #94a3b8;
+    }
+    [data-theme="light"] .hero-card p {
+      color: #334155;
+    }
+    [data-theme="light"] .ex-detail-card {
+      background: #f8fafc;
+      border-color: #cbd5e1;
+    }
+    [data-theme="light"] .ex-code-block {
+      background: #1e293b;
+      color: #f8fafc;
+    }
+    [data-theme="light"] .point-box {
+      background: #eff6ff;
+      border-left-color: #2563eb;
+      color: #1e40af;
+    }
+    [data-theme="light"] .roadmap-table th {
+      background: #f1f5f9;
+      color: #1d4ed8;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="doc-container">
+    <!-- ヘッダー -->
+    <header class="doc-header">
+      <h1 data-i18n="page_title">📖 Hike Web Studio 例題解説 & 教材活用ガイド</h1>
+      <div class="nav-actions">
+        <button id="btnThemeToggleEx" class="btn-theme">🌙 ダーク</button>
+        <button id="btnLangToggleEx" class="btn-lang">🌐 JP / EN</button>
+        <a href="index.html" class="btn-primary" style="text-decoration: none; padding: 6px 14px; font-size: 0.82rem;" data-i18n="btn_back_studio">← Studio エディタに戻る</a>
+        <a href="manual.html" class="btn-manual" style="text-decoration: none; padding: 6px 14px; font-size: 0.82rem;" data-i18n="btn_open_manual">📘 全機能マニュアル</a>
+      </div>
+    </header>
+
+    <!-- ヒーロー解説: なぜHikeがコンピュータサイエンス教育に最適なのか -->
+    <div class="hero-card">
+      <h2 data-i18n="hero_title">🎓 なぜ Hike プログラミング言語が CS / システムプログラミング教材に最適なのか？</h2>
+      
+      <!-- 制作コンセプトメッセージ -->
+      <div style="background: rgba(166, 227, 161, 0.12); border-left: 4px solid var(--accent-green); padding: 12px 16px; border-radius: 0 8px 8px 0; margin-bottom: 16px;">
+        <div style="font-weight: 600; color: var(--accent-green); font-size: 0.88rem; margin-bottom: 4px;" data-i18n="concept_label">💡 開発コンセプト & 制作意図</div>
+        <div style="font-size: 0.86rem; color: #cdd6f4; line-height: 1.6; font-style: italic;" data-i18n="concept_quote">
+          「C言語や本格的なアセンブリに進む前の『最初のウォーミングアップ』として、ポインタやバイナリの感覚を掴むのに最高の教材を作りたい」—— そんな想いから Hike Web Studio は誕生しました。Segmentation Fault や複雑なレジスタ操作で挫折することなく、ブラウザ完結でメモリや文字コードが視覚的に色づく体験を通じて、低レイヤの基礎感覚を自然と体得できます。
+        </div>
+      </div>
+
+      <p data-i18n="hero_desc1">
+        Hike の文法スタイルは <strong>Go 言語に非常に似ており、シンプルで可読性が高い</strong> という特長を持っています。
+        しかし、一般的な高級言語や Go 言語と決定的に異なるのは、<strong>「Zero-GC (ガベージコレクションなし)」「WASM ネイティブコンパイル」「直接的なリニアメモリ視覚化」</strong> を標準備えている点です。
+      </p>
+      <p data-i18n="hero_desc2">
+        プログラミング学習において「メモリ内でデータがどう配置されているか」「ポインタやアドレスとは何か」「アルゴリズムによってメモリがどう変化するか」を頭の中だけで理解するのは容易ではありません。
+        Hike Web Studio では、コードを実行・デバッグしながら <strong>AST、LLVM IR、WASM 命令、および 0x0000 〜 0x0040 のリアルタイムメモリセル</strong> を同時に目視できます。
+      </p>
+
+      <div class="merit-grid">
+        <div class="merit-item">
+          <h4 data-i18n="m1_t">1. Go譲りの洗練されたシンプルな文法</h4>
+          <p data-i18n="m1_d">複雑なC++の構文糖衣に悩まされることなく、`package main`, `func`, `var`, `for` などの明確な文法で本質的なロジックに集中できます。</p>
+        </div>
+        <div class="merit-item">
+          <h4 data-i18n="m2_t">2. メモリと文字コードの「見える化」</h4>
+          <p data-i18n="m2_d">文字列リテラルがメモリ上で ASCII/UTF-8 バイト列として並ぶ様子や、ポインタ経由でアドレスを参照する仕組みが数値と文字で即座に視覚化されます。</p>
+        </div>
+        <div class="merit-item">
+          <h4 data-i18n="m3_t">3. アルゴリズムの段階的ステップ追跡</h4>
+          <p data-i18n="m3_d">バブルソートの要素スワップやユークリッドの互除法の剰余変化、再帰呼び出しのコールスタック挙動を F10 (コマ送り) で完璧に観察可能です。</p>
+        </div>
+        <div class="merit-item">
+          <h4 data-i18n="m4_t">4. アセンブリ / WASM 直結の低レイヤ理解</h4>
+          <p data-i18n="m4_d">高レベルな Hike コードがどのように LLVM IR に展開され、WASM の Stack-Machine 命令に変換されるかを対比学習できます。</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 難易度順カリキュラム一覧 -->
+    <div class="doc-section">
+      <h2 style="color: var(--accent-yellow); border-left: 3px solid var(--accent-yellow); padding-left: 10px; font-size: 1.1rem; font-weight: 600; margin-bottom: 16px;" data-i18n="sec_roadmap_title">
+        ロードマップ: 難易度順の実践演習一覧 (全 9 演習)
+      </h2>
+      <table class="roadmap-table">
+        <thead>
+          <tr>
+            <th data-i18n="th_no">No.</th>
+            <th data-i18n="th_level">難易度</th>
+            <th data-i18n="th_title">演習テーマ</th>
+            <th data-i18n="th_concept">学習概念 & キーワード</th>
+            <th data-i18n="th_target">到達目標</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>1</td>
+            <td><span class="badge-diff diff-1">初級 (Level 1)</span></td>
+            <td><strong>1〜N の総和計算</strong></td>
+            <td>変数宣言, 算術演算, `for` ループ</td>
+            <td>ループ変数と累積変数の状態変化を理解する</td>
+          </tr>
+          <tr>
+            <td>2</td>
+            <td><span class="badge-diff diff-2">初中級 (Level 2)</span></td>
+            <td><strong>文字列リテラルとポインタ操作</strong></td>
+            <td>メモリ文字コード, `*byte`, ポインタ加算</td>
+            <td>リニアメモリ上の UTF-8/ASCII バイト列とアドレス参照を掴む</td>
+          </tr>
+          <tr>
+            <td>3</td>
+            <td><span class="badge-diff diff-2">中級 (Level 3)</span></td>
+            <td><strong>配列要素の最大値探索</strong></td>
+            <td>固定長配列, `if` 条件分岐, インデックス</td>
+            <td>配列がメモリ連続領域に並ぶ構造と探索ロジックの可視化</td>
+          </tr>
+          <tr>
+            <td>4</td>
+            <td><span class="badge-diff diff-3">中級 (Level 4)</span></td>
+            <td><strong>ユークリッドの互除法</strong></td>
+            <td>`for` 条件ループ, 剰余演算 `%`, GCD</td>
+            <td>変数スワップと余り計算によるアルゴリズムの収束追跡</td>
+          </tr>
+          <tr>
+            <td>5</td>
+            <td><span class="badge-diff diff-4">中上級 (Level 5)</span></td>
+            <td><strong>簡易的なバブルソート</strong></td>
+            <td>2重ループ, 隣接比較, 一時変数スワップ</td>
+            <td>ソート処理によってメモリ上の配列値が並び替わる過程の観察</td>
+          </tr>
+          <tr>
+            <td>6</td>
+            <td><span class="badge-diff diff-4">中上級 (Level 6)</span></td>
+            <td><strong>XOR データ暗号化と復号</strong></td>
+            <td>ビット演算 `^`, ビットマスク, 可逆性</td>
+            <td>XOR 演算の可逆性とメモリ上の暗号化データ変化の理解</td>
+          </tr>
+          <tr>
+            <td>7</td>
+            <td><span class="badge-diff diff-5">上級 (Level 7)</span></td>
+            <td><strong>再帰関数 (フィボナッチ数列)</strong></td>
+            <td>自己呼び出し, コールスタック, ベースケース</td>
+            <td>再帰呼び出し時の引数伝搬とスタックフレームの概念を学ぶ</td>
+          </tr>
+          <tr>
+            <td>8</td>
+            <td><span class="badge-diff diff-5">上級 (Level 8)</span></td>
+            <td><strong>Web API HTTP レスポンスパース</strong></td>
+            <td>構造体 `struct`, メモリパディング, 通信</td>
+            <td>構造体メンバーのメモリレイアウトと仮想ネットワーク連携</td>
+          </tr>
+          <tr>
+            <td>9</td>
+            <td><span class="badge-diff diff-5">最上級 (Level 9)</span></td>
+            <td><strong>Studio 自身のセルフコンパイル</strong></td>
+            <td>構造体メソッド, メモリページ確保 (16MB)</td>
+            <td>コンパイラエンジンの自己再帰と超大型 Wasm 領域管理</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 演習ごとの詳細解説 -->
+    <div class="doc-section">
+      <h2 style="color: var(--accent-yellow); border-left: 3px solid var(--accent-yellow); padding-left: 10px; font-size: 1.1rem; font-weight: 600; margin-bottom: 24px;" data-i18n="sec_detail_title">
+        各演習の狙い・コード解説・デバッグガイド
+      </h2>
+
+      <!-- 演習 1 -->
+      <div class="ex-detail-card" id="ex1">
+        <div class="ex-header-bar">
+          <h3>演習 1: 1〜N の総和計算 (ループと変数)</h3>
+          <span class="badge-diff diff-1">初級 (Level 1)</span>
+        </div>
+        <div class="ex-section-title">📝 サンプルソースコード (main.hike)</div>
+        <pre class="ex-code-block"><code>package main
+import "fmt"
+
+func main() int32 {
+    fmt.Println("演習1: 1〜5 の総和計算を開始します")
+    var total int32 = 0
+    for i := 1; i <= 5; i++ {
+        total = total + (i * 10)
+    }
+    fmt.Printf("最終計算結果: %d\n", total)
+    return total
+}</code></pre>
+        <div class="ex-section-title">🎯 教材としての狙い & 学習ポイント</div>
+        <p class="ex-desc-text">
+          プログラムの最も基本的な要素である「変数への代入」「条件付きループ」「算術演算」を学びます。
+          ステップ実行（F10）を行うと、ループの回数に同期して変数 `i` (アドレス `0x0000`) と `total` (アドレス `0x0004`) がどのように書き換わるかをメモリセル上で直感的に確認できます。
+        </p>
+        <div class="point-box">
+          💡 <strong>デバッグの観察ポイント:</strong> メモリパネルの <code>0x0000</code>Cell（変数 i）が 1→2→3→4→5 と更新され、<code>0x0004</code>Cell（変数 total）が 10→30→60→100→150 と加算される過程を黄色ハイライトで追跡してください。
+        </div>
+      </div>
+
+      <!-- 演習 2 -->
+      <div class="ex-detail-card" id="ex2">
+        <div class="ex-header-bar">
+          <h3>演習 2: 文字列リテラルとポインタ操作 (メモリ文字コード確認)</h3>
+          <span class="badge-diff diff-2">初中級 (Level 2)</span>
+        </div>
+        <div class="ex-section-title">📝 サンプルソースコード (main.hike)</div>
+        <pre class="ex-code-block"><code>package main
+import "fmt"
+
+func main() int32 {
+    fmt.Println("演習2: メモリ上の文字列リテラル 'HIKE' とポインタ操作")
+    // メモリ 0x0008〜0x000B に ASCII 文字コード ('H'=72, 'I'=73, 'K'=75, 'E'=69) が配置される
+    var strPtr *byte = ptr("HIKE")
+    var char0 byte = *strPtr
+    var char1 byte = *(strPtr + 1)
+    
+    fmt.Printf("先頭文字: %c (ASCII: 0x%X)\n", char0, char0)
+    fmt.Printf("2番目の文字: %c (ASCII: 0x%X)\n", char1, char1)
+    return int32(char0)
+}</code></pre>
+        <div class="ex-section-title">🎯 教材としての狙い & 学習ポイント</div>
+        <p class="ex-desc-text">
+          文字列が「文字の集合」ではなく「メモリ上の特定の先頭アドレスから連続して配置された文字コード（バイト配列）」であることを学びます。
+          ポインタ `*byte` と間接参照 `*strPtr` やポインタ演算 `*(strPtr + 1)` を通じて、C/C++やアセンブリと同等の低レイヤメモリ操作を体験します。
+        </p>
+        <div class="point-box">
+          💡 <strong>デバッグの観察ポイント:</strong> メモリ表示を「🔢 16進数 (HEX)」に切り替えると、アドレス `0x0008` 〜 `0x000B` に `48` (`'H'`), `49` (`'I'`), `4B` (`'K'`), `45` (`'E'`) の 16 進文字コードが物理配置されているのが視覚確認できます。
+        </div>
+      </div>
+
+      <!-- 演習 3 -->
+      <div class="ex-detail-card" id="ex3">
+        <div class="ex-header-bar">
+          <h3>演習 3: 配列要素の最大値探索 (配列と分岐)</h3>
+          <span class="badge-diff diff-2">中級 (Level 3)</span>
+        </div>
+        <div class="ex-section-title">📝 サンプルソースコード (main.hike)</div>
+        <pre class="ex-code-block"><code>package main
+import "fmt"
+
+func main() int32 {
+    fmt.Println("演習3: 配列の最大値探索")
+    var arr [5]int32
+    arr[0] = 12; arr[1] = 45; arr[2] = 89; arr[3] = 34; arr[4] = 67
+    var maxVal int32 = arr[0]
+    for i := 1; i < 5; i++ {
+        if arr[i] > maxVal { maxVal = arr[i] }
+    }
+    fmt.Printf("配列中の最大値: %d\n", maxVal)
+    return maxVal
+}</code></pre>
+        <div class="ex-section-title">🎯 教材としての狙い & 学習ポイント</div>
+        <p class="ex-desc-text">
+          固定長配列 `[5]int32` がメモリ上で 4 バイトごとの連続領域（`0x0010`, `0x0014`, `0x0018`, `0x001C`, `0x0020`）として確保されることを理解します。
+          `if arr[i] > maxVal` による比較分岐によって、現在の暫定最大値 `maxVal` が 89 に到達した時点で更新が止まるアルゴリズムの分岐ロジックを学びます。
+        </p>
+        <div class="point-box">
+          💡 <strong>デバッグの観察ポイント:</strong> `0x0018`Cell (arr[2] = 89) に到達した瞬間に `maxVal` が 89 に書き換わり、それ以降の 34 や 67 では `if` の条件が偽となり書き換わらない様子をスコープ変数パネルで追跡できます。
+        </div>
+      </div>
+
+      <!-- 演習 4 -->
+      <div class="ex-detail-card" id="ex4">
+        <div class="ex-header-bar">
+          <h3>演習 4: ユークリッドの互除法 (最大公約数・アルゴリズム追跡)</h3>
+          <span class="badge-diff diff-3">中級 (Level 4)</span>
+        </div>
+        <div class="ex-section-title">📝 サンプルソースコード (main.hike)</div>
+        <pre class="ex-code-block"><code>package main
+import "fmt"
+
+func gcd(a int32, b int32) int32 {
+    for b != 0 {
+        r := a % b
+        a = b
+        b = r
+    }
+    return a
+}
+
+func main() int32 {
+    var num1 int32 = 54
+    var num2 int32 = 24
+    fmt.Printf("演習4: %d と %d の最大公約数を計算中...\n", num1, num2)
+    ans := gcd(num1, num2)
+    fmt.Printf("最大公約数 (GCD): %d\n", ans)
+    return ans
+}</code></pre>
+        <div class="ex-section-title">🎯 教材としての狙い & 学習ポイント</div>
+        <p class="ex-desc-text">
+          古代ギリシャ時代から伝わる最古のアルゴリズムの一つ「ユークリッドの互除法」の動作メカニズムを学習します。
+          `a = b`, `b = r` という変数更新スワップと、剰余演算 `%` によって、問題のサイズが急激に小さくなって収束する美しいループ構造を可視化します。
+        </p>
+        <div class="point-box">
+          💡 <strong>デバッグの観察ポイント:</strong> 54 と 24 の計算ステップにおいて：
+          1ステップ目: `54 % 24 = 6` → `a=24, b=6`<br>
+          2ステップ目: `24 % 6 = 0` → `a=6, b=0`<br>
+          `b == 0` となり瞬時にループを抜け、最大公約数 6 が導き出される変遷をメモリ上で目視できます。
+        </div>
+      </div>
+
+      <!-- 演習 5 -->
+      <div class="ex-detail-card" id="ex5">
+        <div class="ex-header-bar">
+          <h3>演習 5: 簡易的なバブルソート (配列の要素スワップ)</h3>
+          <span class="badge-diff diff-4">中上級 (Level 5)</span>
+        </div>
+        <div class="ex-section-title">📝 サンプルソースコード (main.hike)</div>
+        <pre class="ex-code-block"><code>package main
+import "fmt"
+
+func main() int32 {
+    fmt.Println("演習5: バブルソートによる配列の昇順整列")
+    var arr [4]int32
+    arr[0] = 64; arr[1] = 34; arr[2] = 25; arr[3] = 12
+
+    for i := 0; i < 3; i++ {
+        for j := 0; j < 3-i; j++ {
+            if arr[j] > arr[j+1] {
+                temp := arr[j]
+                arr[j] = arr[j+1]
+                arr[j+1] = temp
+            }
+        }
+    }
+    fmt.Printf("ソート完了: arr[0]=%d, arr[3]=%d\n", arr[0], arr[3])
+    return arr[0]
+}</code></pre>
+        <div class="ex-section-title">🎯 教材としての狙い & 学習ポイント</div>
+        <p class="ex-desc-text">
+          データ構造とアルゴリズムの基礎である「ソートアルゴリズム」と「一時変数 `temp` を介した値の入れ替え (スワップ)」を学びます。
+          2重ループによって隣り合う要素 `arr[j]` と `arr[j+1]` を比較し、大きい値がまるで泡 (Bubble) のように配列の末尾へ押し上げられていく挙動を視覚化します。
+        </p>
+        <div class="point-box">
+          💡 <strong>デバッグの観察ポイント:</strong> 初期状態 `[64, 34, 25, 12]` から、ステップ実行を進めるたびにメモリ上の `0x0010`〜`0x001C` の値がリアルタイムで入れ替わり、最終的に `[12, 25, 34, 64]` に美しく並び替わる様子を確認してください。
+        </div>
+      </div>
+
+      <!-- 演習 6 -->
+      <div class="ex-detail-card" id="ex6">
+        <div class="ex-header-bar">
+          <h3>演習 6: XOR データ暗号化と復号 (ビット演算)</h3>
+          <span class="badge-diff diff-4">中上級 (Level 6)</span>
+        </div>
+        <div class="ex-section-title">📝 サンプルソースコード (main.hike)</div>
+        <pre class="ex-code-block"><code>package main
+import "fmt"
+
+func main() int32 {
+    fmt.Println("演習6: XOR ビット暗号化と復号")
+    var secretKey byte = 0xAA
+    var originalData byte = 0x42
+    var encrypted byte = originalData ^ secretKey
+    var decrypted byte = encrypted ^ secretKey
+    fmt.Printf("暗号化: 0x%X -> 復号: 0x%X\n", encrypted, decrypted)
+    return int32(decrypted)
+}</code></pre>
+        <div class="ex-section-title">🎯 教材としての狙い & 学習ポイント</div>
+        <p class="ex-desc-text">
+          コンピューターの根幹である「ビット演算（排他的論理和 XOR `^`）」の性質を学びます。
+          同じ鍵 `secretKey` で 2 回 XOR 演算を行うと元のデータに戻る（`(A ^ K) ^ K = A`）という数学的性質を利用し、暗号通信の基礎概念を理解します。
+        </p>
+        <div class="point-box">
+          💡 <strong>デバッグの観察ポイント:</strong> `originalData` (0x42: 01000010) に `secretKey` (0xAA: 10101010) を掛けると `encrypted` (0xE8: 11101000) に化け、再度 0xAA を描けると見事に 0x42 へ復号されるビット変化を監視できます。
+        </div>
+      </div>
+
+      <!-- 演習 7 -->
+      <div class="ex-detail-card" id="ex7">
+        <div class="ex-header-bar">
+          <h3>演習 7: 再帰関数 (フィボナッチ数列・コールスタックの挙動)</h3>
+          <span class="badge-diff diff-5">上級 (Level 7)</span>
+        </div>
+        <div class="ex-section-title">📝 サンプルソースコード (main.hike)</div>
+        <pre class="ex-code-block"><code>package main
+import "fmt"
+
+func fib(n int32) int32 {
+    if n <= 1 {
+        return n
+    }
+    return fib(n-1) + fib(n-2)
+}
+
+func main() int32 {
+    var n int32 = 6
+    fmt.Printf("演習7: フィボナッチ数 fib(%d) を再帰計算中...\n", n)
+    result := fib(n)
+    fmt.Printf("計算結果 fib(%d) = %d\n", n, result)
+    return result
+}</code></pre>
+        <div class="ex-section-title">🎯 教材としての狙い & 学習ポイント</div>
+        <p class="ex-desc-text">
+          関数が自分自身を呼び出す「再帰呼び出し (Recursion)」と、呼び出しごとに生成される「コールスタック (Call Stack)」の概念を理解します。
+          ベースケース `if n <= 1` が存在しないと無限ループ（スタックオーバーフロー）に陥ることや、深さ優先で木構造状に計算が分解されていく過程を学びます。
+        </p>
+        <div class="point-box">
+          💡 <strong>デバッグの観察ポイント:</strong> ステップ実行中に WASM (WAT) パネルを参照すると、`call $fib` 命令によって引数がスタックに積まれ（Push）、`return` で戻り値が消費されるスタックマシンの挙動が手にとるように分かります。
+        </div>
+      </div>
+
+      <!-- 演習 8 -->
+      <div class="ex-detail-card" id="ex8">
+        <div class="ex-header-bar">
+          <h3>演習 8: Web API HTTP レスポンスパース (構造体メモリ)</h3>
+          <span class="badge-diff diff-5">上級 (Level 8)</span>
+        </div>
+        <div class="ex-section-title">📝 サンプルソースコード (main.hike)</div>
+        <pre class="ex-code-block"><code>package main
+import "fmt"
+
+type ApiResponse struct {
+    status int32
+    size   int32
+}
+
+func main() int32 {
+    fmt.Println("演習8: Web API レスポンス解析")
+    var res ApiResponse
+    res.status = 200; res.size = 2048
+    if res.status == 200 {
+        fmt.Printf("通信成功! 受信サイズ: %d バイト\n", res.size)
+        return 0
+    }
+    return 1
+}</code></pre>
+        <div class="ex-section-title">🎯 教材としての狙い & 学習ポイント</div>
+        <p class="ex-desc-text">
+          複数のデータフィールドをまとめる「構造体 `struct`」のメモリパディングと割り当てを学びます。
+          さらに「仮想サーバー連携モード」に切り替えることで、WASM モジュール間でのネットワーク通信や HTTP パケット解析の擬似体験が可能です。
+        </p>
+        <div class="point-box">
+          💡 <strong>デバッグの観察ポイント:</strong> `res.status` と `res.size` がメモリ上の隣接領域（`0x0030`, `0x0034`）に格納される構造体バッファ構造を直接確認できます。
+        </div>
+      </div>
+
+      <!-- 演習 9 -->
+      <div class="ex-detail-card" id="ex9">
+        <div class="ex-header-bar">
+          <h3>🔥 演習 9: Hike Web Studio 自身のセルフコンパイル</h3>
+          <span class="badge-diff diff-5">最上級 (Level 9)</span>
+        </div>
+        <div class="ex-section-title">📝 サンプルソースコード (main.hike)</div>
+        <pre class="ex-code-block"><code>package main
+import "fmt"
+
+type StudioEngine struct {
+    version     int32
+    memoryPages int32
+    isSelfHost  bool
+}
+
+func (s *StudioEngine) InitStudio() int32 {
+    s.version = 100
+    s.memoryPages = 256
+    s.isSelfHost = true
+    return s.version
+}
+
+func main() int32 {
+    fmt.Println("=== Hike Web Studio Self-Host Compiler Core ===")
+    var studio StudioEngine
+    status := studio.InitStudio()
+    fmt.Printf("Studio Version: %d, Wasm Memory Block: %d Pages (16MB)\n", status, studio.memoryPages)
+    return status
+}</code></pre>
+        <div class="ex-section-title">🎯 教材としての狙い & 学習ポイント</div>
+        <p class="ex-desc-text">
+          本 Studio 自体が Hike 言語で記述され、ブラウザ内でセルフホスト動作している究極のシステム構造を体感します。
+          構造体レシーバーメソッド `func (s *StudioEngine) InitStudio()` や 256 Pages (16MB) の大容量 Wasm メモリ境界領域の確保を追跡します。
+        </p>
+        <div class="point-box">
+          💡 <strong>デバッグの観察ポイント:</strong> 最高度なセルフコンパイルコードの AST / LLVM IR 生成と 16MB 境界の Wasm 実行を、ブラウザ完結でリアルタイムデバッグできます。
+        </div>
+      </div>
+    </div>
+
+    <!-- 授業・独学での活用指導案 -->
+    <div class="doc-section" style="margin-top: 40px; border-top: 1px solid var(--border-color); padding-top: 28px;">
+      <h2 style="color: var(--accent-green); font-size: 1.1rem; font-weight: 600; margin-bottom: 14px;" data-i18n="sec_teach_title">
+        🏫 授業・プログラミング講習・独学でのおすすめ進め方
+      </h2>
+      <ol style="font-size: 0.86rem; color: var(--text-muted); line-height: 1.8; padding-left: 20px;">
+        <li><strong>ステップ 1 (演習 1〜3)</strong>: まずは変数・ループ・配列を「1行ずつ実行 (F10)」し、右下のメモリ画面で数字が変化する感覚を身につける。</li>
+        <li><strong>ステップ 2 (演習 4〜5)</strong>: ユークリッドの互除法やバブルソートで、アルゴリズムの進行に伴い配列や変数の値が入れ替わる動的なドラマを追跡する。</li>
+        <li><strong>ステップ 3 (演習 6〜7)</strong>: ビット演算や再帰関数を通じて、コンピュータ内部のスタックマシン命令や 16進数/2進数のビット操作の仕組みを理解する。</li>
+        <li><strong>ステップ 4 (演習 8〜9)</strong>: 構造体・ネットワーク通信・セルフホストコンパイラへとステップアップし、本格的なシステムプログラミングの世界へ到達する。</li>
+      </ol>
+    </div>
+
+    <!-- ページフッター -->
+    <div style="text-align: center; margin-top: 40px; padding-top: 18px; border-top: 1px solid var(--border-color); color: var(--text-muted); font-size: 0.78rem;">
+      Hike Web Studio Educational Guide & Reference Manual
+    </div>
+  </div>
+
+  <script>
+    let currentExLang = 'ja';
+
+    const exI18n = {
+      ja: {
+        page_title: "📖 Hike Web Studio 例題解説 & 教材活用ガイド",
+        btn_back_studio: "← Studio エディタに戻る",
+        btn_open_manual: "📘 全機能マニュアル",
+        hero_title: "🎓 なぜ Hike プログラミング言語が CS / システムプログラミング教材に最適なのか？",
+        concept_label: "💡 開発コンセプト & 制作意図",
+        concept_quote: "「C言語や本格的なアセンブリに進む前の『最初のウォーミングアップ』として、ポインタやバイナリの感覚を掴むのに最高の教材を作りたい」—— そんな想いから Hike Web Studio は誕生しました。Segmentation Fault や複雑なレジスタ操作で挫折することなく、ブラウザ完結でメモリや文字コードが視覚的に色づく体験を通じて、低レイヤの基礎感覚を自然と体得できます。",
+        hero_desc1: "Hike の文法スタイルは Go 言語に非常に似ており、シンプルで可読性が高い という特長を持っています。しかし、一般的な高級言語や Go 言語と決定的に異なるのは、「Zero-GC (ガベージコレクションなし)」「WASM ネイティブコンパイル」「直接的なリニアメモリ視覚化」 を標準備えている点です。",
+        hero_desc2: "プログラミング学習において「メモリ内でデータがどう配置されているか」「ポインタやアドレスとは何か」「アルゴリズムによってメモリがどう変化するか」を頭の中だけで理解するのは容易ではありません。Hike Web Studio では、コードを実行・デバッグしながら AST、LLVM IR、WASM 命令、および 0x0000 〜 0x0040 のリアルタイムメモリセル を同時に目視できます。",
+        m1_t: "1. Go譲りの洗練されたシンプルな文法",
+        m1_d: "複雑なC++の構文糖衣に悩まされることなく、`package main`, `func`, `var`, `for` などの明確な文法で本質的なロジックに集中できます。",
+        m2_t: "2. メモリと文字コードの「見える化」",
+        m2_d: "文字列リテラルがメモリ上で ASCII/UTF-8 バイト列として並ぶ様子や、ポインタ経由でアドレスを参照する仕組みが数値と文字で即座に視覚化されます。",
+        m3_t: "3. アルゴリズムの段階的ステップ追跡",
+        m3_d: "バブルソートの要素スワップやユークリッドの互除法の剰余変化、再帰呼び出しのコールスタック挙動を F10 (コマ送り) で完璧に観察可能です。",
+        m4_t: "4. アセンブリ / WASM 直結の低レイヤ理解",
+        m4_d: "高レベルな Hike コードがどのように LLVM IR に展開され、WASM の Stack-Machine 命令に変換されるかを対比学習できます。",
+        sec_roadmap_title: "ロードマップ: 難易度順の実践演習一覧 (全 9 演習)",
+        th_no: "No.",
+        th_level: "難易度",
+        th_title: "演習テーマ",
+        th_concept: "学習概念 & キーワード",
+        th_target: "到達目標",
+        sec_detail_title: "各演習の狙い・コード解説・デバッグガイド",
+        sec_teach_title: "🏫 授業・プログラミング講習・独学でのおすすめ進め方"
+      },
+      en: {
+        page_title: "📖 Hike Web Studio Practice Guide & Educational Manual",
+        btn_back_studio: "← Back to Studio Editor",
+        btn_open_manual: "📘 User Manual",
+        hero_title: "🎓 Why Hike is an Ideal Educational Language for Computer Science?",
+        concept_label: "💡 Creator's Vision & Purpose",
+        concept_quote: "\"Designed as the ultimate warm-up tool before stepping into C programming or full assembly, helping learners intuitively master pointers, binary memory offsets, and low-level computer science fundamentals.\" Hike Web Studio was built so students can visualize memory cells lighting up step-by-step in the browser without early frustration from Segmentation Faults or complex register management.",
+        hero_desc1: "Hike features a clean, highly readable syntax strongly inspired by Go. Unlike standard high-level languages, Hike provides Zero-GC execution, native WASM compilation, and direct linear memory visualization out of the box.",
+        hero_desc2: "Grasping pointer memory layouts, address references, and algorithmic memory mutations can be difficult in abstract. In Hike Web Studio, students can visually trace code side-by-side with AST, LLVM IR, WASM instructions, and 0x0000-0x0040 memory cells in real time.",
+        m1_t: "1. Clean & Go-like Readable Syntax",
+        m1_d: "Focus directly on algorithmic core logic using clean `package main`, `func`, `var`, and `for` statements without C++ syntactic clutter.",
+        m2_t: "2. Visualized Memory & Character Codes",
+        m2_d: "Instantly see how string literals lay out ASCII/UTF-8 byte sequences in memory and how pointers dereference offsets.",
+        m3_t: "3. Step-by-Step Algorithmic Trace",
+        m3_d: "Observe bubble sort element swaps, Euclidean GCD remainder changes, and recursive call stacks step-by-step using F10.",
+        m4_t: "4. Low-Level Bridge to WASM & Assembly",
+        m4_d: "Learn how high-level Hike constructs lower directly into LLVM IR text and WebAssembly stack-machine bytecode.",
+        sec_roadmap_title: "Curriculum Roadmap: 9 Exercises by Difficulty",
+        th_no: "No.",
+        th_level: "Level",
+        th_title: "Topic",
+        th_concept: "Concepts & Keywords",
+        th_target: "Learning Objective",
+        sec_detail_title: "Detailed Exercise Analysis & Debugging Guide",
+        sec_teach_title: "🏫 Recommended Approach for Classes & Self-Study"
+      }
+    };
+
+    let currentExTheme = localStorage.getItem('hike_studio_theme') || 'dark';
+
+    function applyExTheme(theme) {
+      currentExTheme = theme;
+      document.documentElement.setAttribute('data-theme', theme);
+      localStorage.setItem('hike_studio_theme', theme);
+      const btn = document.getElementById('btnThemeToggleEx');
+      if (btn) {
+        btn.textContent = (theme === 'dark')
+          ? (currentExLang === 'ja' ? '🌙 ダーク' : '🌙 Dark')
+          : (currentExLang === 'ja' ? '☀️ ライト' : '☀️ Light');
+      }
+    }
+
+    function applyExLanguage(lang) {
+      currentExLang = lang;
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (exI18n[lang][key]) {
+          el.textContent = exI18n[lang][key];
+        }
+      });
+      applyExTheme(currentExTheme);
+    }
+
+    document.getElementById('btnLangToggleEx').addEventListener('click', () => {
+      const nextLang = currentExLang === 'ja' ? 'en' : 'ja';
+      applyExLanguage(nextLang);
+    });
+
+    const btnThemeToggleExEl = document.getElementById('btnThemeToggleEx');
+    if (btnThemeToggleExEl) {
+      btnThemeToggleExEl.addEventListener('click', () => {
+        const nextTheme = currentExTheme === 'dark' ? 'light' : 'dark';
+        applyExTheme(nextTheme);
+      });
+    }
+
+    applyExTheme(currentExTheme);
+  </script>
+</body>
+</html>

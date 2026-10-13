@@ -1,0 +1,93 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 400" width="100%" height="auto">
+  <style>
+    .bg { fill: #181825; }
+    .panel { fill: #1e1e2e; stroke: #313244; stroke-width: 1.5; rx: 6; }
+    .header { fill: #252538; }
+    .text-title { fill: #89b4fa; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 13px; font-weight: bold; }
+    .text-code { fill: #cdd6f4; font-family: 'Cascadia Code', Consolas, monospace; font-size: 11px; }
+    .text-highlight { fill: #f9e2af; font-weight: bold; }
+    .text-accent { fill: #a6e3a1; font-family: 'Cascadia Code', Consolas, monospace; font-size: 11px; }
+    .bp-dot { fill: #f38ba8; animation: pulse 1.8s infinite; }
+    .active-line { fill: rgba(249, 226, 175, 0.22); stroke: #f9e2af; stroke-width: 1; animation: moveLine 6s infinite ease-in-out; }
+    .splitter-bar { fill: #89b4fa; animation: moveSplitter 6s infinite ease-in-out; }
+    .intersection-dot { fill: #f9e2af; stroke: #89b4fa; stroke-width: 2; animation: moveIntersection 6s infinite ease-in-out; }
+    
+    @keyframes moveLine {
+      0%, 25% { transform: translateY(0px); }
+      40%, 65% { transform: translateY(22px); }
+      80%, 95% { transform: translateY(44px); }
+      100% { transform: translateY(0px); }
+    }
+    
+    @keyframes moveSplitter {
+      0%, 20% { transform: translateX(0px); }
+      45%, 65% { transform: translateX(-35px); }
+      80%, 95% { transform: translateX(35px); }
+      100% { transform: translateX(0px); }
+    }
+
+    @keyframes moveIntersection {
+      0%, 20% { transform: translate(0px, 0px); }
+      45%, 65% { transform: translate(-25px, -15px); }
+      80%, 95% { transform: translate(25px, 15px); }
+      100% { transform: translate(0px, 0px); }
+    }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 0.5; transform: scale(1); transform-origin: 26px 115px; }
+      50% { opacity: 1; transform: scale(1.4); transform-origin: 26px 115px; }
+    }
+  </style>
+
+  <!-- Background -->
+  <rect width="800" height="400" class="bg" rx="8"/>
+
+  <!-- Top Studio Bar -->
+  <rect width="800" height="38" fill="#1e1e2e"/>
+  <text x="16" y="24" class="text-title">Hike Web Studio - 使い方アニメーションデモ (Usage Demo)</text>
+  <rect x="665" y="8" width="120" height="22" rx="4" fill="#89b4fa"/>
+  <text x="678" y="23" fill="#11111b" font-family="sans-serif" font-size="11" font-weight="bold">🔄 レイアウト復元</text>
+
+  <!-- Panel 1: Code Editor with Active Line Animation -->
+  <rect x="12" y="48" width="378" height="165" class="panel"/>
+  <rect x="12" y="48" width="378" height="28" class="header"/>
+  <text x="22" y="66" class="text-title">📄 main.hike (ステップデバッグ & 🔴ブレークポイント)</text>
+  
+  <rect class="active-line" x="18" y="93" width="366" height="20" rx="3"/>
+  <circle cx="26" cy="115" r="5" class="bp-dot"/>
+  <text x="38" y="90" class="text-code">1: var total int32 = 0</text>
+  <text x="38" y="107" class="text-code">2: for i := 1; i &lt;= 5; i++ {  <tspan class="text-highlight">◀ 現在地バー (F10 / F5)</tspan></text>
+  <text x="38" y="129" class="text-code">3: 🔴 total = total + (i * 10)  (🔴 BP位置で自動停止)</text>
+  <text x="38" y="151" class="text-code">4: }</text>
+
+  <!-- Panel 2: Multi-Row Memory Dump -->
+  <rect x="410" y="48" width="378" height="165" class="panel"/>
+  <rect x="410" y="48" width="378" height="28" class="header"/>
+  <text x="420" y="66" class="text-title">🔍 多行リニアメモリダンプ (変数名ラベル mapping)</text>
+  <text x="420" y="96" class="text-accent">Offset    +00    +04    +08    +0C</text>
+  <text x="420" y="120" class="text-code">0x0000:   05     96     00     00  (i: 5, total: 150)</text>
+  <text x="420" y="144" class="text-code">0x0010:   0C     2D     59     22  (arr[0..3] 配列領域)</text>
+  <text x="420" y="168" class="text-code">0x0020:   64     00     AA     42  (m.width / secretKey)</text>
+
+  <!-- Panel 3: Splitter Wall Dragging -->
+  <rect x="12" y="224" width="378" height="165" class="panel"/>
+  <rect x="12" y="224" width="378" height="28" class="header"/>
+  <text x="22" y="242" class="text-title">🧱 分割壁（スプリッター）のドラッグ移動 & 自動たたみ</text>
+  <rect x="180" y="260" width="6" height="120" class="splitter-bar"/>
+  <text x="22" y="280" class="text-code">・壁を左右/上下にドラッグ ↔ 幅高さをリサイズ</text>
+  <text x="22" y="305" class="text-accent">・幅が 14% 未満で自動たたむ (Auto-Fold)</text>
+  <text x="22" y="330" class="text-code">・「➖/➕」ボタンまたはダブルクリックで手動たたみ</text>
+  <text x="22" y="355" class="text-code">・ヘッダーの「⋮⋮」ドラッグで枠の配置を入れ替え</text>
+
+  <!-- Panel 4: Console & Safety Shield -->
+  <rect x="410" y="224" width="378" height="165" class="panel"/>
+  <rect x="410" y="224" width="378" height="28" class="header"/>
+  <text x="420" y="242" class="text-title">🛡️ コンソール出力 & WASM 安全ガード</text>
+  <text x="420" y="278" fill="#89b4fa" font-family="monospace" font-size="11">[System] Hike WASM Engine 起動完了</text>
+  <text x="420" y="300" fill="#a6e3a1" font-family="monospace" font-size="11">[Debug] Step 2: Line 3 (total=30)</text>
+  <text x="420" y="322" fill="#f9e2af" font-family="monospace" font-size="11">[Shield] 16MB メモリ制限 &amp; 10分間タイマー正常</text>
+  <text x="420" y="344" fill="#a6e3a1" font-family="monospace" font-size="11">[Result] main() 実行終了: 戻り値 = 150</text>
+
+  <!-- Center Intersection Handle Indicator -->
+  <circle cx="400" cy="216" r="8" class="intersection-dot"/>
+</svg>
