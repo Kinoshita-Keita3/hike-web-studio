@@ -113,6 +113,13 @@ python -m http.server 8080
 
 ---
 
+## 🔗 関連リンク (Related Links)
+
+* **Hike プログラミング言語 公式リポジトリ**: [https://github.com/kanryu/hike-lang](https://github.com/kanryu/hike-lang)
+* **Hike Web Studio リポジトリ**: [https://github.com/Kinoshita-Keita3/hike-web-studio](https://github.com/Kinoshita-Keita3/hike-web-studio)
+
+---
+
 ## 📄 ライセンス (License)
 
 本プロジェクトは **[MIT License](./LICENSE)** の下で公開されています。

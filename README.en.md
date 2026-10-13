@@ -115,6 +115,13 @@ Open `http://localhost:8080` (or the URL shown in your terminal) in any modern w
 
 ---
 
+## 🔗 Related Links
+
+* **Hike Programming Language Official Repository**: [https://github.com/kanryu/hike-lang](https://github.com/kanryu/hike-lang)
+* **Hike Web Studio GitHub Repository**: [https://github.com/Kinoshita-Keita3/hike-web-studio](https://github.com/Kinoshita-Keita3/hike-web-studio)
+
+---
+
 ## 📄 License
 
 This project is licensed under the **[MIT License](./LICENSE)**.

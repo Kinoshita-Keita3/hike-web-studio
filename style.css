@@ -232,6 +232,8 @@ button.btn-reset-layout { background: var(--bg-main); border: 1px solid var(--ac
 button.btn-reset-layout:hover { background: rgba(137, 180, 250, 0.15); }
 a.btn-git, button.btn-git { background: var(--bg-sub); border: 1px solid var(--border-color); color: var(--text-main); font-weight: 500; font-size: 0.82rem; padding: 4px 10px; border-radius: 4px; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; }
 a.btn-git:hover, button.btn-git:hover { background: #313244; border-color: var(--accent-purple); color: var(--accent-purple); }
+a.btn-hike-lang, button.btn-hike-lang { background: var(--bg-sub); border: 1px solid var(--border-color); color: var(--text-main); font-weight: 500; font-size: 0.82rem; padding: 4px 10px; border-radius: 4px; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; }
+a.btn-hike-lang:hover, button.btn-hike-lang:hover { background: #313244; border-color: var(--accent-green); color: var(--accent-green); }
 a.btn-manual, button.btn-manual { background: var(--bg-sub); border: 1px solid var(--accent-blue); color: var(--accent-blue); font-weight: 600; font-size: 0.82rem; padding: 4px 10px; border-radius: 4px; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; }
 a.btn-manual:hover, button.btn-manual:hover { background: rgba(137, 180, 250, 0.15); }
 button.btn-lang { background: transparent; border: 1px solid var(--border-color); color: var(--text-muted); }
