@@ -120,3 +120,4 @@ Open `http://localhost:8080` (or the URL shown in your terminal) in any modern w
 This project is licensed under the **[MIT License](./LICENSE)**.
 
 Copyright (c) 2026 HIKE Project / HIKE contributors
+

@@ -19,3 +19,4 @@ yarn-error.log*
 *.log
 .cache/
 scratch/
+
