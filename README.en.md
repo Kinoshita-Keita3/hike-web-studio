@@ -8,38 +8,38 @@
 
 **English** | [日本語 (Original)](./README.md)
 
-> ⚠️ **Notice on Language & Single Source of Truth**:  
+> **Notice on Language & Single Source of Truth**:  
 > This English document is translated by AI for convenience, with the **[Japanese version (README.md)](./README.md)** serving as the **authoritative single source of truth (真)**. In case of any discrepancy, ambiguity, or conflict between the translations, the Japanese version shall take precedence.
 
 ---
 
-## 📖 Overview
+## Overview
 
 **Hike Web Studio** is an in-browser integrated development and debugging learning environment (Web IDE & Playground) for the [Hike programming language](https://github.com/kanryu/hike-lang).
 
 Operating entirely client-side without requiring any backend server, it dynamically transpiles Hike source code into LLVM IR and WebAssembly (WAT/WASM), allowing you to step through execution and monitor memory states, variables, and call stacks in real time.
 
-> **💡 Development Concept & Purpose**  
+> **Development Concept & Purpose**  
 > **"Create the ultimate warmup learning tool for grasping pointers and raw binary concepts before moving on to C or full assembly language."**  
 > Without getting discouraged by Segmentation Faults or complex CPU register sets, learners can naturally develop an intuition for low-level systems through an interactive browser experience where memory addresses and ASCII/UTF-8 character codes illuminate and update in real time.
 
 ---
 
-## 🌟 Key Features
+## Key Features
 
-### 1. ⚡ Dynamic In-Browser Compilation (Single Source of Truth)
+### 1. Dynamic In-Browser Compilation (Single Source of Truth)
 * **WAT/WABT Direct Pipeline (Structured HIR → WAT) & LLVM IR**:
   * Treats the Hike code editor as the single source of truth to dynamically compile and generate valid WAT code and LLVM IR.
   * **WAT/WABT Direct Pipeline**: Uses the official Hike compiler structured HIR to emit WAT preserving exact instruction order. Eliminates the source-to-instruction drift caused by LLVM optimization passes (inlining, basic block reordering), providing 1:1 precise debug information and DWARF synchronization.
   * Direct export and download of `main.hike`, `main.wat`, `main.wasm`, and `main.ll`.
 
-### 2. ⏭️ Visual Step Debugger & Restored Highlight Synchronization
+### 2. Visual Step Debugger & Restored Highlight Synchronization
 * **1:1 Real-Time Synchronization between HIKE Code & WebAssembly Instructions**:
   * Full support for Step Over (<kbd>F10</kbd>), Auto-Step (2-second interval), and Breakpoint Skip / Continue (<kbd>F5</kbd>).
   * **Restored Highlight Synchronization**: Directly connected with the WAT/WABT pipeline, fully restoring the previously omitted red markers on the compiled panel (WASM / WAT). The active line in the Hike editor and the corresponding Wasm instruction in the WAT panel sync in real-time with automatic scroll tracking.
   * **Cross-Code Marker Mode**: Click any line in the Hike editor or any instruction in the WASM panel in non-debug mode to highlight linked elements in soft blue.
 
-### 3. 🔍 Linear Memory Visualizer (Zero-GC Heap View)
+### 3. Linear Memory Visualizer (Zero-GC Heap View)
 * **Real-time Memory Dump Table**:
   * Visual highlights and animations on changed Little-Endian 32-bit integers and byte sequences.
   * One-click toggle between Hexadecimal (HEX) and Decimal (DEC) formats.
@@ -47,7 +47,7 @@ Operating entirely client-side without requiring any backend server, it dynamica
 * **Variable & Stack Watch Panel**:
   * Real-time tabular tracking of local variables, struct fields, return codes, and call stacks.
 
-### 4. 📚 Built-in Learning Exercises (Exercises 1 through 9)
+### 4. Built-in Learning Exercises (Exercises 1 through 9)
 Preloaded sample codes covering fundamentals up to advanced systems concepts:
 1. **Exercise 1: Sum Calculation** (Basics of loops and local variables)
 2. **Exercise 2: String Literals & Pointer Operations** (Inspecting ASCII character codes in linear memory)
@@ -59,14 +59,14 @@ Preloaded sample codes covering fundamentals up to advanced systems concepts:
 8. **Exercise 8: Web API HTTP Response Parser** (Struct memory layouts and virtual network node simulation)
 9. **Exercise 9: Self-Compiling the Studio Engine** (16MB linear memory allocation and self-host compiler architecture)
 
-### 5. 🖥️ Customizable IDE Layout & Multilingual UI
+### 5. Customizable IDE Layout & Multilingual UI
 * **Layout Presets**: Switch between 4-panel (2×2), 3-panel, 2-panel (horizontal/vertical), and 1-panel (fullscreen).
 * **Drag-and-Drop Splitters**: Freely reposition panels and drag splitters to resize panes.
 * **Theme & Language Toggles**: Instant switching between Dark / Light theme and Japanese / English UI.
 
 ---
 
-## ⌨️ Keybindings
+## Keybindings
 
 | Key | Action |
 | :--- | :--- |
@@ -77,7 +77,7 @@ Preloaded sample codes covering fundamentals up to advanced systems concepts:
 
 ---
 
-## 📂 Directory Structure
+## Directory Structure
 
 ```text
 hike-web-studio/
@@ -97,7 +97,7 @@ hike-web-studio/
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 No build tools or backend servers are required. Hike Web Studio runs as a pure static web app:
 
@@ -116,14 +116,14 @@ Open `http://localhost:8080` (or the URL shown in your terminal) in any modern w
 
 ---
 
-## 🔗 Related Links
+## Related Links
 
 * **Hike Programming Language Official Repository**: [https://github.com/kanryu/hike-lang](https://github.com/kanryu/hike-lang)
 * **Hike Web Studio GitHub Repository**: [https://github.com/Kinoshita-Keita3/hike-web-studio](https://github.com/Kinoshita-Keita3/hike-web-studio)
 
 ---
 
-## 📄 License
+## License
 
 This project is licensed under the **[MIT License](./LICENSE)**.
 

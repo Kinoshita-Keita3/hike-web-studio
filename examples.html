@@ -250,22 +250,22 @@
   <div class="doc-container">
     <!-- ヘッダー -->
     <header class="doc-header">
-      <h1 data-i18n="page_title">📖 Hike Web Studio 例題解説 & 教材活用ガイド</h1>
+      <h1 data-i18n="page_title">Hike Web Studio 例題解説 & 教材活用ガイド</h1>
       <div class="nav-actions">
-        <button id="btnThemeToggleEx" class="btn-theme">🌙 ダーク</button>
-        <button id="btnLangToggleEx" class="btn-lang">🌐 JP / EN</button>
+        <button id="btnThemeToggleEx" class="btn-theme">ダーク</button>
+        <button id="btnLangToggleEx" class="btn-lang">JP / EN</button>
         <a href="index.html" class="btn-primary" style="text-decoration: none; padding: 6px 14px; font-size: 0.82rem;" data-i18n="btn_back_studio">← Studio エディタに戻る</a>
-        <a href="manual.html" class="btn-manual" style="text-decoration: none; padding: 6px 14px; font-size: 0.82rem;" data-i18n="btn_open_manual">📘 全機能マニュアル</a>
+        <a href="manual.html" class="btn-manual" style="text-decoration: none; padding: 6px 14px; font-size: 0.82rem;" data-i18n="btn_open_manual">全機能マニュアル</a>
       </div>
     </header>
 
     <!-- ヒーロー解説: なぜHikeがコンピュータサイエンス教育に最適なのか -->
     <div class="hero-card">
-      <h2 data-i18n="hero_title">🎓 なぜ Hike プログラミング言語が CS / システムプログラミング教材に最適なのか？</h2>
+      <h2 data-i18n="hero_title">なぜ Hike プログラミング言語が CS / システムプログラミング教材に最適なのか？</h2>
       
       <!-- 制作コンセプトメッセージ -->
       <div style="background: rgba(166, 227, 161, 0.12); border-left: 4px solid var(--accent-green); padding: 12px 16px; border-radius: 0 8px 8px 0; margin-bottom: 16px;">
-        <div style="font-weight: 600; color: var(--accent-green); font-size: 0.88rem; margin-bottom: 4px;" data-i18n="concept_label">💡 開発コンセプト & 制作意図</div>
+        <div style="font-weight: 600; color: var(--accent-green); font-size: 0.88rem; margin-bottom: 4px;" data-i18n="concept_label">開発コンセプト & 制作意図</div>
         <div style="font-size: 0.86rem; color: #cdd6f4; line-height: 1.6; font-style: italic;" data-i18n="concept_quote">
           「C言語や本格的なアセンブリに進む前の『最初のウォーミングアップ』として、ポインタやバイナリの感覚を掴むのに最高の教材を作りたい」—— そんな想いから Hike Web Studio は誕生しました。Segmentation Fault や複雑なレジスタ操作で挫折することなく、ブラウザ完結でメモリや文字コードが視覚的に色づく体験を通じて、低レイヤの基礎感覚を自然と体得できます。
         </div>
@@ -395,7 +395,7 @@
           <h3>演習 1: 1〜N の総和計算 (ループと変数)</h3>
           <span class="badge-diff diff-1">初級 (Level 1)</span>
         </div>
-        <div class="ex-section-title">📝 サンプルソースコード (main.hike)</div>
+        <div class="ex-section-title">サンプルソースコード (main.hike)</div>
         <pre class="ex-code-block"><code>package main
 import "fmt"
 
@@ -408,13 +408,13 @@ func main() int32 {
     fmt.Printf("最終計算結果: %d\n", total)
     return total
 }</code></pre>
-        <div class="ex-section-title">🎯 教材としての狙い & 学習ポイント</div>
+        <div class="ex-section-title">教材としての狙い & 学習ポイント</div>
         <p class="ex-desc-text">
           プログラムの最も基本的な要素である「変数への代入」「条件付きループ」「算術演算」を学びます。
           ステップ実行（F10）を行うと、ループの回数に同期して変数 `i` (アドレス `0x0000`) と `total` (アドレス `0x0004`) がどのように書き換わるかをメモリセル上で直感的に確認できます。
         </p>
         <div class="point-box">
-          💡 <strong>デバッグの観察ポイント:</strong> メモリパネルの <code>0x0000</code>Cell（変数 i）が 1→2→3→4→5 と更新され、<code>0x0004</code>Cell（変数 total）が 10→30→60→100→150 と加算される過程を黄色ハイライトで追跡してください。
+          <strong>デバッグの観察ポイント:</strong> メモリパネルの <code>0x0000</code>Cell（変数 i）が 1→2→3→4→5 と更新され、<code>0x0004</code>Cell（変数 total）が 10→30→60→100→150 と加算される過程を黄色ハイライトで追跡してください。
         </div>
       </div>
 
@@ -424,7 +424,7 @@ func main() int32 {
           <h3>演習 2: 文字列リテラルとポインタ操作 (メモリ文字コード確認)</h3>
           <span class="badge-diff diff-2">初中級 (Level 2)</span>
         </div>
-        <div class="ex-section-title">📝 サンプルソースコード (main.hike)</div>
+        <div class="ex-section-title">サンプルソースコード (main.hike)</div>
         <pre class="ex-code-block"><code>package main
 import "fmt"
 
@@ -439,13 +439,13 @@ func main() int32 {
     fmt.Printf("2番目の文字: %c (ASCII: 0x%X)\n", char1, char1)
     return int32(char0)
 }</code></pre>
-        <div class="ex-section-title">🎯 教材としての狙い & 学習ポイント</div>
+        <div class="ex-section-title">教材としての狙い & 学習ポイント</div>
         <p class="ex-desc-text">
           文字列が「文字の集合」ではなく「メモリ上の特定の先頭アドレスから連続して配置された文字コード（バイト配列）」であることを学びます。
           ポインタ `*byte` と間接参照 `*strPtr` やポインタ演算 `*(strPtr + 1)` を通じて、C/C++やアセンブリと同等の低レイヤメモリ操作を体験します。
         </p>
         <div class="point-box">
-          💡 <strong>デバッグの観察ポイント:</strong> メモリ表示を「🔢 16進数 (HEX)」に切り替えると、アドレス `0x0008` 〜 `0x000B` に `48` (`'H'`), `49` (`'I'`), `4B` (`'K'`), `45` (`'E'`) の 16 進文字コードが物理配置されているのが視覚確認できます。
+          <strong>デバッグの観察ポイント:</strong> メモリ表示を「16進数 (HEX)」に切り替えると、アドレス `0x0008` 〜 `0x000B` に `48` (`'H'`), `49` (`'I'`), `4B` (`'K'`), `45` (`'E'`) の 16 進文字コードが物理配置されているのが視覚確認できます。
         </div>
       </div>
 
@@ -455,7 +455,7 @@ func main() int32 {
           <h3>演習 3: 配列要素の最大値探索 (配列と分岐)</h3>
           <span class="badge-diff diff-2">中級 (Level 3)</span>
         </div>
-        <div class="ex-section-title">📝 サンプルソースコード (main.hike)</div>
+        <div class="ex-section-title">サンプルソースコード (main.hike)</div>
         <pre class="ex-code-block"><code>package main
 import "fmt"
 
@@ -470,13 +470,13 @@ func main() int32 {
     fmt.Printf("配列中の最大値: %d\n", maxVal)
     return maxVal
 }</code></pre>
-        <div class="ex-section-title">🎯 教材としての狙い & 学習ポイント</div>
+        <div class="ex-section-title">教材としての狙い & 学習ポイント</div>
         <p class="ex-desc-text">
           固定長配列 `[5]int32` がメモリ上で 4 バイトごとの連続領域（`0x0010`, `0x0014`, `0x0018`, `0x001C`, `0x0020`）として確保されることを理解します。
           `if arr[i] > maxVal` による比較分岐によって、現在の暫定最大値 `maxVal` が 89 に到達した時点で更新が止まるアルゴリズムの分岐ロジックを学びます。
         </p>
         <div class="point-box">
-          💡 <strong>デバッグの観察ポイント:</strong> `0x0018`Cell (arr[2] = 89) に到達した瞬間に `maxVal` が 89 に書き換わり、それ以降の 34 や 67 では `if` の条件が偽となり書き換わらない様子をスコープ変数パネルで追跡できます。
+          <strong>デバッグの観察ポイント:</strong> `0x0018`Cell (arr[2] = 89) に到達した瞬間に `maxVal` が 89 に書き換わり、それ以降の 34 や 67 では `if` の条件が偽となり書き換わらない様子をスコープ変数パネルで追跡できます。
         </div>
       </div>
 
@@ -486,7 +486,7 @@ func main() int32 {
           <h3>演習 4: ユークリッドの互除法 (最大公約数・アルゴリズム追跡)</h3>
           <span class="badge-diff diff-3">中級 (Level 4)</span>
         </div>
-        <div class="ex-section-title">📝 サンプルソースコード (main.hike)</div>
+        <div class="ex-section-title">サンプルソースコード (main.hike)</div>
         <pre class="ex-code-block"><code>package main
 import "fmt"
 
@@ -507,13 +507,13 @@ func main() int32 {
     fmt.Printf("最大公約数 (GCD): %d\n", ans)
     return ans
 }</code></pre>
-        <div class="ex-section-title">🎯 教材としての狙い & 学習ポイント</div>
+        <div class="ex-section-title">教材としての狙い & 学習ポイント</div>
         <p class="ex-desc-text">
           古代ギリシャ時代から伝わる最古のアルゴリズムの一つ「ユークリッドの互除法」の動作メカニズムを学習します。
           `a = b`, `b = r` という変数更新スワップと、剰余演算 `%` によって、問題のサイズが急激に小さくなって収束する美しいループ構造を可視化します。
         </p>
         <div class="point-box">
-          💡 <strong>デバッグの観察ポイント:</strong> 54 と 24 の計算ステップにおいて：
+          <strong>デバッグの観察ポイント:</strong> 54 と 24 の計算ステップにおいて：
           1ステップ目: `54 % 24 = 6` → `a=24, b=6`<br>
           2ステップ目: `24 % 6 = 0` → `a=6, b=0`<br>
           `b == 0` となり瞬時にループを抜け、最大公約数 6 が導き出される変遷をメモリ上で目視できます。
@@ -526,7 +526,7 @@ func main() int32 {
           <h3>演習 5: 簡易的なバブルソート (配列の要素スワップ)</h3>
           <span class="badge-diff diff-4">中上級 (Level 5)</span>
         </div>
-        <div class="ex-section-title">📝 サンプルソースコード (main.hike)</div>
+        <div class="ex-section-title">サンプルソースコード (main.hike)</div>
         <pre class="ex-code-block"><code>package main
 import "fmt"
 
@@ -547,13 +547,13 @@ func main() int32 {
     fmt.Printf("ソート完了: arr[0]=%d, arr[3]=%d\n", arr[0], arr[3])
     return arr[0]
 }</code></pre>
-        <div class="ex-section-title">🎯 教材としての狙い & 学習ポイント</div>
+        <div class="ex-section-title">教材としての狙い & 学習ポイント</div>
         <p class="ex-desc-text">
           データ構造とアルゴリズムの基礎である「ソートアルゴリズム」と「一時変数 `temp` を介した値の入れ替え (スワップ)」を学びます。
           2重ループによって隣り合う要素 `arr[j]` と `arr[j+1]` を比較し、大きい値がまるで泡 (Bubble) のように配列の末尾へ押し上げられていく挙動を視覚化します。
         </p>
         <div class="point-box">
-          💡 <strong>デバッグの観察ポイント:</strong> 初期状態 `[64, 34, 25, 12]` から、ステップ実行を進めるたびにメモリ上の `0x0010`〜`0x001C` の値がリアルタイムで入れ替わり、最終的に `[12, 25, 34, 64]` に美しく並び替わる様子を確認してください。
+          <strong>デバッグの観察ポイント:</strong> 初期状態 `[64, 34, 25, 12]` から、ステップ実行を進めるたびにメモリ上の `0x0010`〜`0x001C` の値がリアルタイムで入れ替わり、最終的に `[12, 25, 34, 64]` に美しく並び替わる様子を確認してください。
         </div>
       </div>
 
@@ -563,7 +563,7 @@ func main() int32 {
           <h3>演習 6: XOR データ暗号化と復号 (ビット演算)</h3>
           <span class="badge-diff diff-4">中上級 (Level 6)</span>
         </div>
-        <div class="ex-section-title">📝 サンプルソースコード (main.hike)</div>
+        <div class="ex-section-title">サンプルソースコード (main.hike)</div>
         <pre class="ex-code-block"><code>package main
 import "fmt"
 
@@ -576,13 +576,13 @@ func main() int32 {
     fmt.Printf("暗号化: 0x%X -> 復号: 0x%X\n", encrypted, decrypted)
     return int32(decrypted)
 }</code></pre>
-        <div class="ex-section-title">🎯 教材としての狙い & 学習ポイント</div>
+        <div class="ex-section-title">教材としての狙い & 学習ポイント</div>
         <p class="ex-desc-text">
           コンピューターの根幹である「ビット演算（排他的論理和 XOR `^`）」の性質を学びます。
           同じ鍵 `secretKey` で 2 回 XOR 演算を行うと元のデータに戻る（`(A ^ K) ^ K = A`）という数学的性質を利用し、暗号通信の基礎概念を理解します。
         </p>
         <div class="point-box">
-          💡 <strong>デバッグの観察ポイント:</strong> `originalData` (0x42: 01000010) に `secretKey` (0xAA: 10101010) を掛けると `encrypted` (0xE8: 11101000) に化け、再度 0xAA を描けると見事に 0x42 へ復号されるビット変化を監視できます。
+          <strong>デバッグの観察ポイント:</strong> `originalData` (0x42: 01000010) に `secretKey` (0xAA: 10101010) を掛けると `encrypted` (0xE8: 11101000) に化け、再度 0xAA を描けると見事に 0x42 へ復号されるビット変化を監視できます。
         </div>
       </div>
 
@@ -592,7 +592,7 @@ func main() int32 {
           <h3>演習 7: 再帰関数 (フィボナッチ数列・コールスタックの挙動)</h3>
           <span class="badge-diff diff-5">上級 (Level 7)</span>
         </div>
-        <div class="ex-section-title">📝 サンプルソースコード (main.hike)</div>
+        <div class="ex-section-title">サンプルソースコード (main.hike)</div>
         <pre class="ex-code-block"><code>package main
 import "fmt"
 
@@ -610,13 +610,13 @@ func main() int32 {
     fmt.Printf("計算結果 fib(%d) = %d\n", n, result)
     return result
 }</code></pre>
-        <div class="ex-section-title">🎯 教材としての狙い & 学習ポイント</div>
+        <div class="ex-section-title">教材としての狙い & 学習ポイント</div>
         <p class="ex-desc-text">
           関数が自分自身を呼び出す「再帰呼び出し (Recursion)」と、呼び出しごとに生成される「コールスタック (Call Stack)」の概念を理解します。
           ベースケース `if n <= 1` が存在しないと無限ループ（スタックオーバーフロー）に陥ることや、深さ優先で木構造状に計算が分解されていく過程を学びます。
         </p>
         <div class="point-box">
-          💡 <strong>デバッグの観察ポイント:</strong> ステップ実行中に WASM (WAT) パネルを参照すると、`call $fib` 命令によって引数がスタックに積まれ（Push）、`return` で戻り値が消費されるスタックマシンの挙動が手にとるように分かります。
+          <strong>デバッグの観察ポイント:</strong> ステップ実行中に WASM (WAT) パネルを参照すると、`call $fib` 命令によって引数がスタックに積まれ（Push）、`return` で戻り値が消費されるスタックマシンの挙動が手にとるように分かります。
         </div>
       </div>
 
@@ -626,7 +626,7 @@ func main() int32 {
           <h3>演習 8: Web API HTTP レスポンスパース (構造体メモリ)</h3>
           <span class="badge-diff diff-5">上級 (Level 8)</span>
         </div>
-        <div class="ex-section-title">📝 サンプルソースコード (main.hike)</div>
+        <div class="ex-section-title">サンプルソースコード (main.hike)</div>
         <pre class="ex-code-block"><code>package main
 import "fmt"
 
@@ -645,23 +645,23 @@ func main() int32 {
     }
     return 1
 }</code></pre>
-        <div class="ex-section-title">🎯 教材としての狙い & 学習ポイント</div>
+        <div class="ex-section-title">教材としての狙い & 学習ポイント</div>
         <p class="ex-desc-text">
           複数のデータフィールドをまとめる「構造体 `struct`」のメモリパディングと割り当てを学びます。
           さらに「仮想サーバー連携モード」に切り替えることで、WASM モジュール間でのネットワーク通信や HTTP パケット解析の擬似体験が可能です。
         </p>
         <div class="point-box">
-          💡 <strong>デバッグの観察ポイント:</strong> `res.status` と `res.size` がメモリ上の隣接領域（`0x0030`, `0x0034`）に格納される構造体バッファ構造を直接確認できます。
+          <strong>デバッグの観察ポイント:</strong> `res.status` と `res.size` がメモリ上の隣接領域（`0x0030`, `0x0034`）に格納される構造体バッファ構造を直接確認できます。
         </div>
       </div>
 
       <!-- 演習 9 -->
       <div class="ex-detail-card" id="ex9">
         <div class="ex-header-bar">
-          <h3>🔥 演習 9: Hike Web Studio 自身のセルフコンパイル</h3>
+          <h3>演習 9: Hike Web Studio 自身のセルフコンパイル</h3>
           <span class="badge-diff diff-5">最上級 (Level 9)</span>
         </div>
-        <div class="ex-section-title">📝 サンプルソースコード (main.hike)</div>
+        <div class="ex-section-title">サンプルソースコード (main.hike)</div>
         <pre class="ex-code-block"><code>package main
 import "fmt"
 
@@ -685,13 +685,13 @@ func main() int32 {
     fmt.Printf("Studio Version: %d, Wasm Memory Block: %d Pages (16MB)\n", status, studio.memoryPages)
     return status
 }</code></pre>
-        <div class="ex-section-title">🎯 教材としての狙い & 学習ポイント</div>
+        <div class="ex-section-title">教材としての狙い & 学習ポイント</div>
         <p class="ex-desc-text">
           本 Studio 自体が Hike 言語で記述され、ブラウザ内でセルフホスト動作している究極のシステム構造を体感します。
           構造体レシーバーメソッド `func (s *StudioEngine) InitStudio()` や 256 Pages (16MB) の大容量 Wasm メモリ境界領域の確保を追跡します。
         </p>
         <div class="point-box">
-          💡 <strong>デバッグの観察ポイント:</strong> 最高度なセルフコンパイルコードの AST / LLVM IR 生成と 16MB 境界の Wasm 実行を、ブラウザ完結でリアルタイムデバッグできます。
+          <strong>デバッグの観察ポイント:</strong> 最高度なセルフコンパイルコードの AST / LLVM IR 生成と 16MB 境界の Wasm 実行を、ブラウザ完結でリアルタイムデバッグできます。
         </div>
       </div>
     </div>
@@ -699,7 +699,7 @@ func main() int32 {
     <!-- 授業・独学での活用指導案 -->
     <div class="doc-section" style="margin-top: 40px; border-top: 1px solid var(--border-color); padding-top: 28px;">
       <h2 style="color: var(--accent-green); font-size: 1.1rem; font-weight: 600; margin-bottom: 14px;" data-i18n="sec_teach_title">
-        🏫 授業・プログラミング講習・独学でのおすすめ進め方
+        授業・プログラミング講習・独学でのおすすめ進め方
       </h2>
       <ol style="font-size: 0.86rem; color: var(--text-muted); line-height: 1.8; padding-left: 20px;">
         <li><strong>ステップ 1 (演習 1〜3)</strong>: まずは変数・ループ・配列を「1行ずつ実行 (F10)」し、右下のメモリ画面で数字が変化する感覚を身につける。</li>
@@ -720,11 +720,11 @@ func main() int32 {
 
     const exI18n = {
       ja: {
-        page_title: "📖 Hike Web Studio 例題解説 & 教材活用ガイド",
+        page_title: "Hike Web Studio 例題解説 & 教材活用ガイド",
         btn_back_studio: "← Studio エディタに戻る",
-        btn_open_manual: "📘 全機能マニュアル",
-        hero_title: "🎓 なぜ Hike プログラミング言語が CS / システムプログラミング教材に最適なのか？",
-        concept_label: "💡 開発コンセプト & 制作意図",
+        btn_open_manual: "全機能マニュアル",
+        hero_title: "なぜ Hike プログラミング言語が CS / システムプログラミング教材に最適なのか？",
+        concept_label: "開発コンセプト & 制作意図",
         concept_quote: "「C言語や本格的なアセンブリに進む前の『最初のウォーミングアップ』として、ポインタやバイナリの感覚を掴むのに最高の教材を作りたい」—— そんな想いから Hike Web Studio は誕生しました。Segmentation Fault や複雑なレジスタ操作で挫折することなく、ブラウザ完結でメモリや文字コードが視覚的に色づく体験を通じて、低レイヤの基礎感覚を自然と体得できます。",
         hero_desc1: "Hike の文法スタイルは Go 言語に非常に似ており、シンプルで可読性が高い という特長を持っています。しかし、一般的な高級言語や Go 言語と決定的に異なるのは、「Zero-GC (ガベージコレクションなし)」「WASM ネイティブコンパイル」「直接的なリニアメモリ視覚化」 を標準備えている点です。",
         hero_desc2: "プログラミング学習において「メモリ内でデータがどう配置されているか」「ポインタやアドレスとは何か」「アルゴリズムによってメモリがどう変化するか」を頭の中だけで理解するのは容易ではありません。Hike Web Studio では、コードを実行・デバッグしながら AST、LLVM IR、WASM 命令、および 0x0000 〜 0x0040 のリアルタイムメモリセル を同時に目視できます。",
@@ -743,14 +743,14 @@ func main() int32 {
         th_concept: "学習概念 & キーワード",
         th_target: "到達目標",
         sec_detail_title: "各演習の狙い・コード解説・デバッグガイド",
-        sec_teach_title: "🏫 授業・プログラミング講習・独学でのおすすめ進め方"
+        sec_teach_title: "授業・プログラミング講習・独学でのおすすめ進め方"
       },
       en: {
-        page_title: "📖 Hike Web Studio Practice Guide & Educational Manual",
+        page_title: "Hike Web Studio Practice Guide & Educational Manual",
         btn_back_studio: "← Back to Studio Editor",
-        btn_open_manual: "📘 User Manual",
-        hero_title: "🎓 Why Hike is an Ideal Educational Language for Computer Science?",
-        concept_label: "💡 Creator's Vision & Purpose",
+        btn_open_manual: "User Manual",
+        hero_title: "Why Hike is an Ideal Educational Language for Computer Science?",
+        concept_label: "Creator's Vision & Purpose",
         concept_quote: "\"Designed as the ultimate warm-up tool before stepping into C programming or full assembly, helping learners intuitively master pointers, binary memory offsets, and low-level computer science fundamentals.\" Hike Web Studio was built so students can visualize memory cells lighting up step-by-step in the browser without early frustration from Segmentation Faults or complex register management.",
         hero_desc1: "Hike features a clean, highly readable syntax strongly inspired by Go. Unlike standard high-level languages, Hike provides Zero-GC execution, native WASM compilation, and direct linear memory visualization out of the box.",
         hero_desc2: "Grasping pointer memory layouts, address references, and algorithmic memory mutations can be difficult in abstract. In Hike Web Studio, students can visually trace code side-by-side with AST, LLVM IR, WASM instructions, and 0x0000-0x0040 memory cells in real time.",
@@ -769,7 +769,7 @@ func main() int32 {
         th_concept: "Concepts & Keywords",
         th_target: "Learning Objective",
         sec_detail_title: "Detailed Exercise Analysis & Debugging Guide",
-        sec_teach_title: "🏫 Recommended Approach for Classes & Self-Study"
+        sec_teach_title: "Recommended Approach for Classes & Self-Study"
       }
     };
 
@@ -782,8 +782,8 @@ func main() int32 {
       const btn = document.getElementById('btnThemeToggleEx');
       if (btn) {
         btn.textContent = (theme === 'dark')
-          ? (currentExLang === 'ja' ? '🌙 ダーク' : '🌙 Dark')
-          : (currentExLang === 'ja' ? '☀️ ライト' : '☀️ Light');
+          ? (currentExLang === 'ja' ? 'ダーク' : 'Dark')
+          : (currentExLang === 'ja' ? 'ライト' : 'Light');
       }
     }
 

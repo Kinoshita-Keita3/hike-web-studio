@@ -2,8 +2,40 @@
 
 let currentLang = 'ja';
 let currentMode = 'standard';
-let memoryMode = 'hex';
-let displayedRowsCount = 3; // 初期表示: 3行表示 (64〜96バイト)
+let currentFontSize = localStorage.getItem('hike_studio_font_size') || 'md';
+let memoryMode = 'auto'; // 'auto', 'hex', 'dec', 'float', 'text'
+let autoDetectedMode = 'dec'; // 'hex', 'dec', 'float', 'text'
+let displayedRowsSetting = 'auto'; // 'auto', 1, 2, 3, 5, 'all'
+let displayedRowsCount = 3; // 実際にレンダリングされた行数
+let showAsciiColumn = true; // ASCIIプレビュー列の表示フラグ
+let memorySpanSetting = 'auto'; // 'auto' (型連動可変スパン結合), '4' (4B固定32bit), '8' (8B固定64bit)
+
+const fontSizeScaleMap = {
+  'sm': 0.88,
+  'md': 1.0,
+  'lg': 1.15
+};
+
+function applyFontSize(size) {
+  if (!fontSizeScaleMap[size]) size = 'md';
+  currentFontSize = size;
+  document.documentElement.setAttribute('data-font-size', size);
+  localStorage.setItem('hike_studio_font_size', size);
+
+  document.querySelectorAll('.font-size-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.getAttribute('data-font') === size);
+  });
+
+  if (typeof syncEditorHighlight === 'function') {
+    syncEditorHighlight();
+  }
+  if (typeof updateMemoryGridDisplay === 'function') {
+    updateMemoryGridDisplay();
+  }
+  if (typeof popoutManager !== 'undefined' && popoutManager) {
+    popoutManager.syncThemeAndScale(currentTheme, fontSizeScaleMap[size] || 1.0);
+  }
+}
 
 const breakpointsSet = new Set();
 
@@ -32,6 +64,26 @@ class VirtualLinearMemory {
     }
   }
 
+  // 単精度浮動小数点数 (float32) の書き込み (WASM: f32.store 相当, Little-Endian)
+  writeF32(offset, value) {
+    if (offset < 0 || offset + 4 > this.buffer.byteLength) return;
+    this.changedOffsets.clear();
+    this.view.setFloat32(offset, value, true);
+    for (let i = 0; i < 4; i++) {
+      this.changedOffsets.add(offset + i);
+    }
+  }
+
+  // 倍精度浮動小数点数 (float64) の書き込み (WASM: f64.store 相当, Little-Endian)
+  writeF64(offset, value) {
+    if (offset < 0 || offset + 8 > this.buffer.byteLength) return;
+    this.changedOffsets.clear();
+    this.view.setFloat64(offset, value, true);
+    for (let i = 0; i < 8; i++) {
+      this.changedOffsets.add(offset + i);
+    }
+  }
+
   // 1バイトの書き込み (WASM: i32.store8 相当)
   writeI8(offset, value) {
     if (offset < 0 || offset >= this.buffer.byteLength) return;
@@ -46,15 +98,90 @@ class VirtualLinearMemory {
     return this.view.getInt32(offset, true);
   }
 
-  // オブジェクトマップからの動的一括読み込み
+  // 単精度浮動小数点数 (float32) の読み出し (WASM: f32.load 相当)
+  readF32(offset) {
+    if (offset < 0 || offset + 4 > this.buffer.byteLength) return 0.0;
+    return this.view.getFloat32(offset, true);
+  }
+
+  // 倍精度浮動小数点数 (float64) の読み出し (WASM: f64.load 相当)
+  readF64(offset) {
+    if (offset < 0 || offset + 8 > this.buffer.byteLength) return 0.0;
+    return this.view.getFloat64(offset, true);
+  }
+
+  // 64ビット整数の読み出し (WASM: i64.load 相当, Little-Endian)
+  readI64(offset) {
+    if (offset < 0 || offset + 8 > this.buffer.byteLength) return 0n;
+    return this.view.getBigInt64(offset, true);
+  }
+
+  // 64ビット整数の書き込み (WASM: i64.store 相当, Little-Endian)
+  writeI64(offset, value) {
+    if (offset < 0 || offset + 8 > this.buffer.byteLength) return;
+    this.changedOffsets.clear();
+    const bigVal = typeof value === 'bigint' ? value : BigInt(Math.floor(Number(value) || 0));
+    this.view.setBigInt64(offset, bigVal, true);
+    for (let i = 0; i < 8; i++) {
+      this.changedOffsets.add(offset + i);
+    }
+  }
+
+  // 連続文字列の読み出し (UTF-8 / ASCII)
+  readString(offset, maxLength = 32) {
+    if (offset < 0 || offset >= this.buffer.byteLength) return '';
+    let len = 0;
+    while (offset + len < this.buffer.byteLength && len < maxLength) {
+      if (this.bytes[offset + len] === 0) break;
+      len++;
+    }
+    const slice = this.bytes.slice(offset, offset + len);
+    try {
+      return new TextDecoder('utf-8').decode(slice);
+    } catch (e) {
+      return String.fromCharCode(...slice);
+    }
+  }
+
+  // 連続文字列の書き込み (UTF-8 / ASCII, null終端付与)
+  writeString(offset, str) {
+    if (offset < 0 || offset >= this.buffer.byteLength) return;
+    this.changedOffsets.clear();
+    const encoded = new TextEncoder().encode(str);
+    for (let i = 0; i < encoded.length && (offset + i) < this.buffer.byteLength; i++) {
+      this.view.setUint8(offset + i, encoded[i]);
+      this.changedOffsets.add(offset + i);
+    }
+    if (offset + encoded.length < this.buffer.byteLength) {
+      this.view.setUint8(offset + encoded.length, 0);
+    }
+  }
+
+  // 1バイトの読み出し (WASM: i32.load8_u 相当)
+  readI8(offset) {
+    if (offset < 0 || offset >= this.buffer.byteLength) return 0;
+    return this.view.getUint8(offset);
+  }
+
+  // オブジェクトマップからの動的一括読み込み (Int32 / Float64 / BigInt64 / String 対応)
   loadFromObject(memObj) {
     this.changedOffsets.clear();
     if (!memObj) return;
     for (const offStr in memObj) {
       const off = parseInt(offStr, 10);
       const val = memObj[offStr];
-      if (!isNaN(off) && typeof val === 'number') {
-        this.writeI32(off, val);
+      if (!isNaN(off)) {
+        if (typeof val === 'number') {
+          if (Number.isInteger(val)) {
+            this.writeI32(off, val);
+          } else {
+            this.writeF64(off, val);
+          }
+        } else if (typeof val === 'bigint') {
+          this.writeI64(off, val);
+        } else if (typeof val === 'string') {
+          this.writeString(off, val);
+        }
       }
     }
   }
@@ -236,7 +363,7 @@ func main() int32 {
     }
     return 1
 }`,
-  self_host: `// 🔥 演習 9: Hike Web Studio 自身のセルフコンパイル & メモリ構造 【最上級】
+  self_host: `// 演習 9: Hike Web Studio 自身のセルフコンパイル & メモリ構造 【最上級】
 package main
 
 import "fmt"
@@ -266,143 +393,227 @@ func main() int32 {
 const i18n = {
   ja: {
     title: "Hike Web Studio",
-    version: "v0.1.0",
-    mode_standard: "🟢 フリー",
-    mode_server: "🌐 仮想サーバー連携",
-    mode_advanced: "⚙️ アドバンス",
-    btn_manual: "📘 取説・ガイド",
-    btn_hike_lang: "🏔️ Hike言語",
-    btn_git: "📦 Git",
-    btn_exercises: "📖 例題",
-    btn_reset_layout: "🔄 表示復元",
-    btn_save_hike: "💾 保存",
-    btn_export_wasm: "💾 WASM出力",
-    btn_export_wat: "📜 WAT出力",
-    drop_zone_text: "📥 .hike ファイルをドロップして読み込み",
-    adv_link_modules: "🔗 リンクモジュール:",
-    adv_compiler_flags: "⚙️ フラグ & 安全制御:",
-    adv_compiler_pipeline: "🏗️ コンパイラ・パイプライン:",
-    opt_backend_wabt: "🏔️ WAT/WABT 直結 (構造化HIR・1対1高精度デバッグ推奨)",
-    opt_backend_llvm: "⚡ LLVM IR パイプライン (-O3 最適化)",
-    server_target: "🌐 仮想通信相手サーバー:",
-    srv_auth: "🔒 仮想 Auth サーバー (配置Wasm: remote_auth.wasm)",
-    srv_upload: "📦 仮想 Storage サーバー (配置Wasm: remote_stream.wasm)",
-    srv_qr: "📷 仮想 Code Scanner ノード (配置Wasm: remote_scanner.wasm)",
-    chk_debug: "-g デバッグ情報",
-    btn_build: "⚡ ビルド",
-    btn_run: "▶ 実行",
-    dbg_start: "▶️ 開始",
-    dbg_next: "⏭️ 次",
-    dbg_continue: "⏩ スキップ",
-    dbg_reset: "🔄 リセット",
-    panel_editor: "📄 main.hike (Hike WASM 高速ドライバ稼働中)",
-    panel_wasm: "⚙️ WASM / LLVM IR 出力",
-    panel_console: "💻 コンソール出力 & デバッグトレース",
-    panel_memory: "🔍 ローカル変数 & リニアメモリ (Zero-GC)",
+    version: "v0.1.1",
+    mode_standard: "フリー",
+    mode_server: "仮想サーバー",
+    mode_advanced: "アドバンス",
+    menu_run: "実行",
+    menu_mode: "モード",
+    menu_view: "表示",
+    menu_learn: "学習",
+    menu_settings: "設定",
+    menu_layout_label: "分割プリセット:",
+    menu_save_hike: "コード保存 (.hk)",
+    menu_export_wasm: "Wasm保存 (.wasm)",
+    menu_export_wat: "WAT保存 (.wat)",
+    menu_export_llvm: "LLVM保存 (.ll)",
+    mode_standard_desc: "フリー",
+    mode_server_desc: "仮想サーバー",
+    mode_advanced_desc: "アドバンス",
+    btn_examples_guide: "教材ガイド",
+    btn_manual: "マニュアル",
+    btn_hike_lang: "Hike言語",
+    btn_git: "GitHub",
+    btn_exercises: "例題集",
+    btn_reset_layout: "初期配置に戻す",
+    btn_save_hike: "保存",
+    btn_export_wasm: "WASM出力",
+    btn_export_wat: "WAT出力",
+    btn_export_llvm: "LLVM出力",
+    drop_zone_text: "ファイルをドロップ",
+    adv_link_modules: "モジュール:",
+    adv_compiler_flags: "フラグ:",
+    adv_compiler_pipeline: "コンパイラ:",
+    opt_backend_wabt: "標準 (WAT)",
+    opt_backend_llvm: "最適化 (LLVM -O3)",
+    server_target: "サーバー:",
+    srv_auth: "Auth サーバー",
+    srv_upload: "Storage サーバー",
+    srv_qr: "Scanner ノード",
+    chk_debug: "-g デバッグ",
+    btn_build: "ビルド",
+    btn_run: "実行",
+    dbg_start: "開始",
+    dbg_next: "次",
+    dbg_continue: "スキップ",
+    dbg_reset: "リセット",
+    panel_editor: "エディタ",
+    panel_wasm: "WASM",
+    panel_console: "コンソール",
+    panel_memory: "メモリ",
     status_ready: "準備完了",
     status_compiling: "コンパイル中...",
     btn_clear: "消去",
-    scope_vars: "📌 現在のスコープ変数 (Local Scope):",
-    mem_dump_title: "メモリダンプ & 変数名ラベルマッピング:",
-    ex_modal_title: "📖 Hike プログラミング例題・演習集",
-    manual_modal_title: "📘 Hike Web Studio 取扱説明書 & WASM 安全性ガイドライン",
-    log_init: "[システム] Hike Web Studio が起動しました。",
-    log_mem_rows_switched: "[メモリ表示] メモリ表示を {rows} 行に変更しました。",
-    log_start_worker: "[コンパイル] バックグラウンドでコンパイル処理を実行中...",
-    log_success_build: "[ビルド成功] Hike AST および LLVM IR の生成に成功しました！",
-    log_success_wabt_build: "[ビルド成功] WAT/WABT 直結パイプライン (構造化HIR → WAT) による正確なWasm命令出力を完了しました！",
-    log_emitted_wasm: "[WASM出力] バイナリモジュールの生成が完了しました。",
-    log_dbg_started: "[デバッグ開始] WASMリアルタイムステップ実行を開始しました。",
-    log_dbg_step: "[ステップ Line {line}] {code}",
-    log_dbg_finished: "[実行完了] main() 関数が正常終了しました。(全 {steps} ステップ)",
-    log_dbg_reset: "[デバッグ] 実行状態をリセットしました。",
-    log_bp_hit: "[ブレークポイント到達] 🔴 Line {line} で一時停止しました。",
-    log_bp_toggled: "[ブレークポイント] {line} 行目のブレークポイントを{status}しました。",
-    opt_layout_4: "⊞ 4枠 (2×2)",
-    opt_layout_4tb: "⬒ 4枠 (上2・下縦)",
-    opt_layout_4bt: "⬓ 4枠 (上縦・下2)",
-    opt_layout_3l: "◧ 3枠 (左1・右2)",
-    opt_layout_3r: "◨ 3枠 (左2・右1)",
-    opt_layout_3t: "⬒ 3枠 (上1・下2)",
-    opt_layout_3b: "⬓ 3枠 (上2・下1)",
-    opt_layout_2h: "◫ 2枠 (左右)",
-    opt_layout_2v: "⊟ 2枠 (上下)",
-    opt_layout_1: "🔲 1枠 (全画面)",
-    title_editor: "📄 main.hike (エディタ)",
-    title_llvm: "📜 LLVM IR",
-    title_wasm: "⚙️ WASM (WAT)",
-    title_console: "💻 コンソール & トレース",
-    title_memory: "🔍 リニアメモリ (Zero-GC)"
+    scope_vars: "ローカル変数",
+    mem_dump_title: "メモリダンプ",
+    ex_modal_title: "例題集",
+    manual_modal_title: "取扱説明書",
+    log_init: "[システム] 準備完了",
+    log_mem_rows_switched: "[メモリ] {rows}行表示に変更",
+    log_start_worker: "[コンパイル] 処理中...",
+    log_success_build: "[ビルド] 成功しました",
+    log_success_wabt_build: "[ビルド] 成功しました",
+    log_emitted_wasm: "[WASM] 出力完了",
+    log_dbg_started: "[デバッグ] 開始",
+    log_dbg_step: "[Line {line}] {code}",
+    log_dbg_finished: "[実行完了] 正常終了しました ({steps}ステップ)",
+    log_dbg_reset: "[デバッグ] リセット完了",
+    log_bp_hit: "[停止] Line {line}",
+    log_bp_toggled: "[ブレークポイント] Line {line} {status}",
+    opt_layout_4: "4分割 (2×2)",
+    opt_layout_4tb: "4分割 (上2・下縦)",
+    opt_layout_4bt: "4分割 (上縦・下2)",
+    opt_layout_3l: "3分割 (左1・右2)",
+    opt_layout_3r: "3分割 (左2・右1)",
+    opt_layout_3t: "3分割 (上1・下2)",
+    opt_layout_3b: "3分割 (上2・下1)",
+    opt_layout_2h: "2分割 (左右)",
+    opt_layout_2v: "2分割 (上下)",
+    opt_layout_1: "1画面 (全画面)",
+    title_editor: "エディタ",
+    title_llvm: "LLVM IR",
+    title_wasm: "WASM",
+    title_console: "コンソール",
+    title_memory: "メモリ",
+    panel_menu_code: "コード",
+    panel_menu_debug: "デバッグ",
+    panel_menu_display: "表示設定",
+    menu_export: "出力",
+    btn_marker: "連動マーカー",
+    dbg_auto: "自動",
+    dbg_step_quick: "次へ",
+    menu_font_size: "文字サイズ",
+    font_sm: "小",
+    font_md: "標準",
+    font_lg: "大",
+    mem_format_title: "表示形式",
+    mem_layout_title: "レイアウト",
+    mem_mode_hex: "16進数 (HEX)",
+    mem_mode_dec: "10進整数 (INT)",
+    mem_mode_float: "浮動小数点 (FLOAT)",
+    mem_mode_text: "文字 (TEXT)",
+    mem_rows_auto: "行数: 自動 (連動)",
+    mem_span_auto: "ブロック幅: 自動スパン (型連動)",
+    mem_span_4: "ブロック幅: 4バイト固定 (32bit)",
+    mem_span_8: "ブロック幅: 8バイト固定 (64bit)",
+    mem_ascii_on: "ASCII列: 表示",
+    mem_ascii_off: "ASCII列: 非表示",
+    mem_mode_auto: "自動 (ブロック型連動)",
+    btn_popout: "別ウィンドウで開く (切り離し)",
+    btn_merge: "合流して戻す",
+    popout_active_msg: "別ウィンドウで表示中"
   },
   en: {
     title: "Hike Web Studio",
-    version: "v0.1.0",
-    mode_standard: "🟢 Free",
-    mode_server: "🌐 Virtual Server",
-    mode_advanced: "⚙️ Advanced",
-    btn_manual: "📘 Guide",
-    btn_hike_lang: "🏔️ Hike Lang",
-    btn_git: "📦 Git",
-    btn_exercises: "📖 Examples",
-    btn_reset_layout: "🔄 Reset",
-    btn_save_hike: "💾 Save",
-    btn_export_wasm: "💾 WASM Export",
-    btn_export_wat: "📜 WAT Export",
-    drop_zone_text: "📥 Drop .hike file here to open",
-    adv_link_modules: "🔗 Link Modules:",
-    adv_compiler_flags: "⚙️ Flags & Security:",
-    adv_compiler_pipeline: "🏗️ Compiler Pipeline:",
-    opt_backend_wabt: "🏔️ WAT/WABT Direct (Structured HIR, 1:1 Precise Debug)",
-    opt_backend_llvm: "⚡ LLVM IR Pipeline (-O3 Optimization)",
-    server_target: "🌐 Target Virtual Server:",
-    srv_auth: "🔒 Virtual Auth Server (Wasm: remote_auth.wasm)",
-    srv_upload: "📦 Virtual Storage Server (Wasm: remote_stream.wasm)",
-    srv_qr: "📷 Virtual Code Scanner Node (Wasm: remote_scanner.wasm)",
-    chk_debug: "-g DWARF Debug",
-    btn_build: "⚡ Build",
-    btn_run: "▶ Run",
-    dbg_start: "▶️ Start",
-    dbg_next: "⏭️ Next",
-    dbg_continue: "⏩ Skip",
-    dbg_reset: "🔄 Reset",
-    panel_editor: "📄 main.hike (Hike WASM Engine Active)",
-    panel_wasm: "⚙️ WASM / LLVM IR Output",
-    panel_console: "💻 Console & Debug Output",
-    panel_memory: "🔍 Local Variables & Linear Memory (Zero-GC)",
+    version: "v0.1.1",
+    mode_standard: "Free",
+    mode_server: "Virtual Server",
+    mode_advanced: "Advanced",
+    menu_run: "Run",
+    menu_mode: "Mode",
+    menu_view: "View",
+    menu_learn: "Learn",
+    menu_settings: "Settings",
+    menu_layout_label: "Layout Preset:",
+    menu_save_hike: "Save (.hk)",
+    menu_export_wasm: "Save Wasm (.wasm)",
+    menu_export_wat: "Save WAT (.wat)",
+    menu_export_llvm: "Save LLVM (.ll)",
+    mode_standard_desc: "Free",
+    mode_server_desc: "Virtual Server",
+    mode_advanced_desc: "Advanced",
+    btn_examples_guide: "Guide",
+    btn_manual: "Manual",
+    btn_hike_lang: "Hike Lang",
+    btn_git: "GitHub",
+    btn_exercises: "Examples",
+    btn_reset_layout: "Reset Layout",
+    btn_save_hike: "Save",
+    btn_export_wasm: "WASM Export",
+    btn_export_wat: "WAT Export",
+    btn_export_llvm: "LLVM Export",
+    drop_zone_text: "Drop file here",
+    adv_link_modules: "Modules:",
+    adv_compiler_flags: "Flags:",
+    adv_compiler_pipeline: "Compiler:",
+    opt_backend_wabt: "Standard (WAT)",
+    opt_backend_llvm: "Optimized (LLVM -O3)",
+    server_target: "Server:",
+    srv_auth: "Auth Server",
+    srv_upload: "Storage Server",
+    srv_qr: "Scanner Node",
+    chk_debug: "-g Debug",
+    btn_build: "Build",
+    btn_run: "Run",
+    dbg_start: "Start",
+    dbg_next: "Next",
+    dbg_continue: "Skip",
+    dbg_reset: "Reset",
+    panel_editor: "Editor",
+    panel_wasm: "WASM",
+    panel_console: "Console",
+    panel_memory: "Memory",
     status_ready: "Ready",
     status_compiling: "Compiling...",
     btn_clear: "Clear",
-    scope_vars: "📌 Current Local Scope Variables:",
-    mem_dump_title: "Linear Memory Dump & Variable Symbol Labels:",
-    ex_modal_title: "📖 Hike Practice Exercises",
-    manual_modal_title: "📘 Hike Web Studio User Manual & WASM Safety Policy",
-    log_init: "[System] Hike Web Studio Initialized.",
-    log_mem_rows_switched: "[Memory View] Displaying {rows} memory rows.",
-    log_start_worker: "[Compiler] Compiling in Web Worker...",
-    log_success_build: "[Build Succeeded] Generated Hike AST & LLVM IR.",
-    log_success_wabt_build: "[Build Succeeded] Emitted accurate Wasm instructions via WAT/WABT direct pipeline (Structured HIR -> WAT)!",
-    log_emitted_wasm: "[WASM Output] Emitted binary module (JS-glue free).",
-    log_dbg_started: "[Debug Started] Started real-time WASM step execution.",
-    log_dbg_step: "[Step Line {line}] {code}",
-    log_dbg_finished: "[Complete] main() finished execution ({steps} steps).",
-    log_dbg_reset: "[Debug] Reset execution state.",
-    log_bp_hit: "[Breakpoint Hit] 🔴 Paused at Line {line}.",
-    log_bp_toggled: "[Breakpoint] {status} breakpoint at Line {line}.",
-    opt_layout_4: "⊞ 4P (2x2)",
-    opt_layout_4tb: "⬒ 4P (Top2/BotV)",
-    opt_layout_4bt: "⬓ 4P (TopV/Bot2)",
-    opt_layout_3l: "◧ 3P (L1/R2)",
-    opt_layout_3r: "◨ 3P (L2/R1)",
-    opt_layout_3t: "⬒ 3P (T1/B2)",
-    opt_layout_3b: "⬓ 3P (T2/B1)",
-    opt_layout_2h: "◫ 2P (Horiz)",
-    opt_layout_2v: "⊟ 2P (Vert)",
-    opt_layout_1: "🔲 1P (Full)",
-    title_editor: "📄 main.hike (Editor)",
-    title_llvm: "📜 LLVM IR",
-    title_wasm: "⚙️ WASM (WAT)",
-    title_console: "💻 Console & Trace",
-    title_memory: "🔍 Memory (Zero-GC)"
+    scope_vars: "Local Variables",
+    mem_dump_title: "Memory Dump",
+    ex_modal_title: "Examples",
+    manual_modal_title: "User Manual",
+    log_init: "[System] Ready",
+    log_mem_rows_switched: "[Memory] {rows} rows",
+    log_start_worker: "[Compiler] Processing...",
+    log_success_build: "[Build] Succeeded",
+    log_success_wabt_build: "[Build] Succeeded",
+    log_emitted_wasm: "[WASM] Emitted",
+    log_dbg_started: "[Debug] Started",
+    log_dbg_step: "[Line {line}] {code}",
+    log_dbg_finished: "[Complete] Finished ({steps} steps)",
+    log_dbg_reset: "[Debug] Reset",
+    log_bp_hit: "[Paused] Line {line}",
+    log_bp_toggled: "[Breakpoint] Line {line} {status}",
+    opt_layout_4: "4 Panels (2x2)",
+    opt_layout_4tb: "4 Panels (Top 2)",
+    opt_layout_4bt: "4 Panels (Bottom 2)",
+    opt_layout_3l: "3 Panels (Left 1)",
+    opt_layout_3r: "3 Panels (Right 1)",
+    opt_layout_3t: "3 Panels (Top 1)",
+    opt_layout_3b: "3 Panels (Bottom 1)",
+    opt_layout_2h: "2 Panels (Horizontal)",
+    opt_layout_2v: "2 Panels (Vertical)",
+    opt_layout_1: "1 Panel (Full)",
+    title_editor: "Editor",
+    title_llvm: "LLVM IR",
+    title_wasm: "WASM",
+    title_console: "Console",
+    title_memory: "Memory",
+    panel_menu_code: "Code",
+    panel_menu_debug: "Debug",
+    panel_menu_display: "Display",
+    menu_export: "Export",
+    btn_marker: "Marker",
+    dbg_auto: "Auto Step",
+    dbg_step_quick: "Next",
+    menu_font_size: "Font Size",
+    font_sm: "Small",
+    font_md: "Medium",
+    font_lg: "Large",
+    mem_format_title: "Format",
+    mem_layout_title: "Layout",
+    mem_mode_hex: "Hexadecimal (HEX)",
+    mem_mode_dec: "Integer (INT)",
+    mem_mode_float: "Float (FLOAT)",
+    mem_mode_text: "Text / ASCII",
+    mem_rows_auto: "Rows: Auto (Dynamic)",
+    mem_span_auto: "Block Span: Auto (Type-aware)",
+    mem_span_4: "Block Span: 4 Bytes (32bit)",
+    mem_span_8: "Block Span: 8 Bytes (64bit)",
+    mem_ascii_on: "ASCII Col: Visible",
+    mem_ascii_off: "ASCII Col: Hidden",
+    mem_mode_auto: "Auto (Block Type-Aware)",
+    btn_popout: "Pop out to window",
+    btn_merge: "Merge back",
+    popout_active_msg: "Displayed in separate window"
   }
 };
 
@@ -416,10 +627,14 @@ function applyTheme(theme) {
   const btn = document.getElementById('btnThemeToggle');
   if (btn) {
     if (theme === 'dark') {
-      btn.textContent = (currentLang === 'ja') ? '🌙 ダーク' : '🌙 Dark';
+      btn.textContent = (currentLang === 'ja') ? 'ダーク' : 'Dark';
     } else {
-      btn.textContent = (currentLang === 'ja') ? '☀️ ライト' : '☀️ Light';
+      btn.textContent = (currentLang === 'ja') ? 'ライト' : 'Light';
     }
+  }
+
+  if (typeof popoutManager !== 'undefined' && popoutManager) {
+    popoutManager.syncThemeAndScale(theme, fontSizeScaleMap[currentFontSize] || 1.0);
   }
 }
 
@@ -438,6 +653,12 @@ function applyLanguage(lang) {
     const key = el.getAttribute('data-i18n');
     if (i18n[lang][key]) {
       el.textContent = i18n[lang][key];
+    }
+  });
+  document.querySelectorAll('[data-i18n-title]').forEach(el => {
+    const key = el.getAttribute('data-i18n-title');
+    if (i18n[lang][key]) {
+      el.title = i18n[lang][key];
     }
   });
   applyTheme(currentTheme);
@@ -488,7 +709,7 @@ function buildDynamicDebugTrace(codeText) {
     return -1;
   };
 
-  const isStringPtr = codeText.includes('strPtr') || codeText.includes('HIKE') || codeText.includes('演習2');
+  const isStringPtr = codeText.includes('strPtr') || codeText.includes('演習2') || codeText.includes('演習 2');
   const isMax = codeText.includes('arr[0] = 12') && codeText.includes('maxVal');
   const isGcd = codeText.includes('gcd(') || codeText.includes('演習4');
   const isBubble = codeText.includes('arr[j] > arr[j+1]') || codeText.includes('演習5');
@@ -877,27 +1098,34 @@ function buildDynamicDebugTrace(codeText) {
           const expr = match[1].trim();
           const off = varToOffsetMap[varName];
           
-          const numLiteral = expr.match(/^(0x[0-9a-fA-F]+|\d+)$/);
-          if (numLiteral) {
-            const parsed = parseInt(numLiteral[1], numLiteral[1].startsWith('0x') ? 16 : 10);
-            runningMem[off] = parsed;
+          const strLiteral = expr.match(/^["`](.*)["`]$/);
+          if (strLiteral) {
+            runningMem[off] = strLiteral[1];
             updatedOff = off;
-            updatedVal = parsed;
+            updatedVal = strLiteral[1];
           } else {
-            try {
-              let evalExpr = expr;
-              for (const v in varToOffsetMap) {
-                const val = runningMem[varToOffsetMap[v]] !== undefined ? runningMem[varToOffsetMap[v]] : 0;
-                evalExpr = evalExpr.replace(new RegExp('\\b' + v + '\\b', 'g'), val);
+            const numLiteral = expr.match(/^(0x[0-9a-fA-F]+|\d+)$/);
+            if (numLiteral) {
+              const parsed = parseInt(numLiteral[1], numLiteral[1].startsWith('0x') ? 16 : 10);
+              runningMem[off] = parsed;
+              updatedOff = off;
+              updatedVal = parsed;
+            } else {
+              try {
+                let evalExpr = expr;
+                for (const v in varToOffsetMap) {
+                  const val = runningMem[varToOffsetMap[v]] !== undefined ? runningMem[varToOffsetMap[v]] : 0;
+                  evalExpr = evalExpr.replace(new RegExp('\\b' + v + '\\b', 'g'), val);
+                }
+                const calcVal = Function('"use strict";return (' + evalExpr + ')')();
+                if (typeof calcVal === 'number' && !isNaN(calcVal)) {
+                  runningMem[off] = calcVal;
+                  updatedOff = off;
+                  updatedVal = calcVal;
+                }
+              } catch(e) {
+                // 無効な式の例外は安全に捕獲
               }
-              const calcVal = Function('"use strict";return (' + evalExpr + ')')();
-              if (typeof calcVal === 'number' && !isNaN(calcVal)) {
-                runningMem[off] = calcVal;
-                updatedOff = off;
-                updatedVal = calcVal;
-              }
-            } catch(e) {
-              // 無効な式の例外は安全に捕獲
             }
           }
         }
@@ -930,7 +1158,11 @@ function buildDynamicDebugTrace(codeText) {
       };
 
       if (updatedOff !== null && updatedVal !== null) {
-        stepObj.memAction = { op: 'STORE', offset: updatedOff, value: updatedVal };
+        let op = 'STORE';
+        if (typeof updatedVal === 'string') op = 'STORE_STRING';
+        else if (typeof updatedVal === 'number' && !Number.isInteger(updatedVal)) op = 'STORE_F64';
+        else if (typeof updatedVal === 'bigint') op = 'STORE_I64';
+        stepObj.memAction = { op, offset: updatedOff, value: updatedVal };
       }
 
       trace.push(stepObj);
@@ -995,55 +1227,271 @@ function toggleBreakpoint(lineNum) {
   updateEditorGutter();
 }
 
-// 表示行数 (1行 / 2行 / 3行) の切り替えボタン
+// 表示行数 (自動 / 1行 / 2行 / 3行 / 5行 / 全表示) の切り替え
 function toggleMemoryRows() {
-  displayedRowsCount = (displayedRowsCount % 3) + 1;
-  document.getElementById('btnRowsToggle').textContent = `📊 ${displayedRowsCount}行表示`;
+  const settingsCycle = ['auto', 1, 2, 3, 5, 'all'];
+  const currentIndex = settingsCycle.indexOf(displayedRowsSetting);
+  displayedRowsSetting = settingsCycle[(currentIndex + 1) % settingsCycle.length];
+  
+  const labelRows = document.getElementById('labelRowsToggle');
+  if (labelRows) {
+    if (displayedRowsSetting === 'auto') {
+      labelRows.textContent = i18n[currentLang]?.mem_rows_auto || '行数: 自動 (連動)';
+      labelRows.setAttribute('data-i18n', 'mem_rows_auto');
+    } else if (displayedRowsSetting === 'all') {
+      labelRows.textContent = (currentLang === 'ja') ? '行数: 全表示 (8行)' : 'Rows: All (8 Rows)';
+      labelRows.removeAttribute('data-i18n');
+    } else {
+      labelRows.textContent = (currentLang === 'ja') ? `行数: ${displayedRowsSetting}行` : `Rows: ${displayedRowsSetting}`;
+      labelRows.removeAttribute('data-i18n');
+    }
+  }
   updateMemoryGridDisplay();
-  const msg = i18n[currentLang].log_mem_rows_switched.replace('{rows}', displayedRowsCount);
+  const msg = currentLang === 'ja'
+    ? `[メモリ] 行数設定を「${displayedRowsSetting === 'auto' ? '自動 (連動)' : displayedRowsSetting}」に変更しました。`
+    : `[Memory] Changed row display to "${displayedRowsSetting}".`;
   log(msg, 'info');
 }
 
-// Hikeソースコードから変数シンボル名と4バイト整列のメモリ位置を動的解析
-function getDynamicMemorySymbolMap(codeText) {
+// ブロックの結合スパン設定 (自動スパン / 4バイト固定 / 8バイト固定) の切り替え
+function toggleMemorySpan() {
+  const spanCycle = ['auto', '4', '8'];
+  const currentIndex = spanCycle.indexOf(memorySpanSetting);
+  memorySpanSetting = spanCycle[(currentIndex + 1) % spanCycle.length];
+
+  const labelSpan = document.getElementById('labelSpanToggle');
+  if (labelSpan) {
+    const key = `mem_span_${memorySpanSetting}`;
+    labelSpan.textContent = i18n[currentLang]?.[key] || (
+      memorySpanSetting === 'auto' ? 'ブロック幅: 自動スパン (型連動)' :
+      memorySpanSetting === '4' ? 'ブロック幅: 4バイト固定 (32bit)' : 'ブロック幅: 8バイト固定 (64bit)'
+    );
+    labelSpan.setAttribute('data-i18n', key);
+  }
+  updateMemoryGridDisplay();
+  const desc = {
+    'auto': currentLang === 'ja' ? '自動スパン (型連動)' : 'Auto (Type-aware)',
+    '4': currentLang === 'ja' ? '4バイト固定 (32bit)' : '4 Bytes Fixed (32bit)',
+    '8': currentLang === 'ja' ? '8バイト固定 (64bit)' : '8 Bytes Fixed (64bit)'
+  };
+  const msg = currentLang === 'ja'
+    ? `[メモリ] ブロック結合スパン設定を「${desc[memorySpanSetting]}」に変更しました。`
+    : `[Memory] Changed block span setting to "${desc[memorySpanSetting]}".`;
+  log(msg, 'info');
+}
+
+// ブロックごとの個別表示形式オーバーライドマップ (offset -> 'hex'|'dec'|'float'|'text')
+const cellFormatOverrides = new Map();
+
+// メモリ表示形式 (AUTO / HEX / DEC / FLOAT / TEXT) 切り替え
+function setMemoryMode(mode) {
+  memoryMode = mode;
+  document.querySelectorAll('.mem-mode-item').forEach(btn => {
+    btn.classList.toggle('active', btn.getAttribute('data-mode') === mode);
+  });
+  updateMemoryGridDisplay();
+  const modeLabels = {
+    'auto': currentLang === 'ja' ? '自動 (ブロック型連動)' : 'Auto (Block Type-Aware)',
+    'hex': '16進数 (HEX)',
+    'dec': '10進整数 (INT)',
+    'float': '浮動小数点 (FLOAT)',
+    'text': '文字・ASCII (TEXT)'
+  };
+  const msg = currentLang === 'ja'
+    ? `[メモリ] 全体表示形式を「${modeLabels[mode] || mode}」に切り替えました。`
+    : `[Memory] Switched global display format to "${modeLabels[mode] || mode}".`;
+  log(msg, 'info');
+}
+
+// 各メモリブロックの型をシンボル名やコードから自動判定
+function inferBlockType(absOff, varName, codeText) {
+  if (!varName || varName === '-') return 'hex';
+
+  const lower = varName.toLowerCase();
+  if (lower.includes('float') || lower.includes('pi') || lower.includes('rate') || lower.includes('f32') || lower.includes('f64') || lower.includes('double')) {
+    return 'float';
+  }
+  if (lower.includes('str') || lower.includes('char') || lower.includes('msg') || lower.includes('text') || lower.includes('name')) {
+    return 'text';
+  }
+  if (lower.includes('int') || lower.includes('total') || lower.includes('sum') || lower.includes('count') || lower.includes('arr') || lower.includes('temp') || lower.includes('status') || lower.includes('size') || lower.includes('key') || lower.includes('gcd') || lower.includes('num') || lower.includes('rem') || lower.includes('ans') || lower.includes('fib') || lower.includes('result')) {
+    return 'dec';
+  }
+  if (lower.includes('ptr') || lower.includes('buf') || lower.includes('addr')) {
+    return 'hex';
+  }
+
+  if (codeText) {
+    const cleanVar = varName.split('/')[0].trim().replace(/\[\d+\]/, '');
+    const declMatch = codeText.match(new RegExp(`var\\s+${cleanVar}\\s+([a-zA-Z0-9_*]+)`));
+    if (declMatch) {
+      const type = declMatch[1];
+      if (type.includes('float') || type.includes('f32') || type.includes('f64') || type.includes('double')) return 'float';
+      if (type.includes('string') || type.includes('*byte') || type.includes('char')) return 'text';
+      if (type.includes('int') || type.includes('i32') || type.includes('i64')) return 'dec';
+    }
+  }
+
+  return 'dec';
+}
+
+// クリックしたブロックの表示形式を個別に循環切り替え
+function toggleCellBlockFormat(absOff, currentBlockFormat, span = 1) {
+  let cycle = ['hex', 'dec', 'float', 'text'];
+  if (span >= 2) {
+    // 複数Intにまたがるスパン結合セルの場合は、floatやtextを優先
+    cycle = ['float', 'dec', 'hex', 'text'];
+  }
+  const curIdx = cycle.indexOf(currentBlockFormat);
+  const nextFormat = cycle[(curIdx + 1) % cycle.length];
+  cellFormatOverrides.set(absOff, nextFormat);
+  updateMemoryGridDisplay();
+
+  const formatNames = {
+    'hex': '16進数 (HEX)',
+    'dec': span >= 2 ? '64bit整数 (INT64)' : '10進整数 (INT32)',
+    'float': span >= 2 ? '倍精度実数 (FLOAT64)' : '単精度実数 (FLOAT32)',
+    'text': '文字・ASCII (TEXT)'
+  };
+  const hexStr = `0x00${absOff.toString(16).padStart(2, '0').toUpperCase()}`;
+  const byteCount = span * 4;
+  const msg = currentLang === 'ja'
+    ? `[メモリ] ブロック ${hexStr} (${byteCount}B) の表示形式を「${formatNames[nextFormat]}」に変更しました。`
+    : `[Memory] Switched block ${hexStr} (${byteCount}B) format to "${nextFormat.toUpperCase()}".`;
+  log(msg, 'info');
+}
+
+function handleWatchItemClick(varName) {
+  // アドレスオフセットの抽出 (例: "res.status (@ 0x0030)")
+  const offMatch = varName.match(/0x([0-9a-fA-F]+)/);
+  if (offMatch) {
+    const off = parseInt(offMatch[1], 16);
+    highlightMemoryCellByOffset(off);
+  }
+}
+
+function highlightMemoryCellByOffset(off) {
+  const hexOff = off.toString(16);
+  const cell = document.getElementById(`m-${hexOff}`);
+  if (cell) {
+    cell.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    cell.classList.add('memory-val-changed');
+    setTimeout(() => {
+      cell.classList.remove('memory-val-changed');
+    }, 1200);
+  }
+}
+
+// ASCIIプレビュー列の表示/非表示切り替え
+function toggleAsciiColumn() {
+  showAsciiColumn = !showAsciiColumn;
+  const labelAscii = document.getElementById('labelAsciiColToggle');
+  if (labelAscii) {
+    const key = showAsciiColumn ? 'mem_ascii_on' : 'mem_ascii_off';
+    labelAscii.textContent = i18n[currentLang]?.[key] || (showAsciiColumn ? 'ASCII列: 表示' : 'ASCII列: 非表示');
+    labelAscii.setAttribute('data-i18n', key);
+  }
+  updateMemoryGridDisplay();
+  const msg = currentLang === 'ja'
+    ? `[メモリ] ASCIIプレビュー列を${showAsciiColumn ? '表示' : '非表示'}にしました。`
+    : `[Memory] ASCII column is now ${showAsciiColumn ? 'visible' : 'hidden'}.`;
+  log(msg, 'info');
+}
+
+// Hikeソースコードから変数シンボル名、型、バイトサイズを動的構文解析
+function getDynamicMemorySymbols(codeText) {
   if (!codeText) return {};
-  const map = {};
+  const symbols = {};
 
-  // 演習プリセットコードの場合は、ステップデバッグのトレース割り当てと完全調和するラベルを返却
-  if (codeText.includes('strPtr') || codeText.includes('HIKE') || codeText.includes('演習2')) {
-    return { 0: 'strPtr', 4: 'char0', 8: 'char1', 12: 'str[1]' };
+  // 演習プリセットコード用マッピング (演習コード選択時のみ適用)
+  if (codeText.includes('演習2') || codeText.includes('演習 2')) {
+    symbols[0]  = { name: 'strPtr', type: 'hex', size: 4 };
+    symbols[4]  = { name: 'char0', type: 'text', size: 4 };
+    symbols[8]  = { name: 'char1', type: 'text', size: 4 };
+    symbols[12] = { name: 'str[1]', type: 'text', size: 4 };
+    return symbols;
   }
-  if (codeText.includes('gcd(') || codeText.includes('演習4')) {
-    return { 32: 'a / num1', 36: 'b / num2', 40: 'rem / ans' };
+  if (codeText.includes('演習4') || codeText.includes('演習 4')) {
+    symbols[32] = { name: 'a / num1', type: 'dec', size: 4 };
+    symbols[36] = { name: 'b / num2', type: 'dec', size: 4 };
+    symbols[40] = { name: 'rem / ans', type: 'dec', size: 4 };
+    return symbols;
   }
-  if (codeText.includes('arr[j] > arr[j+1]') || codeText.includes('演習5')) {
-    return { 16: 'arr[0]', 20: 'arr[1]', 24: 'arr[2]', 28: 'arr[3]', 44: 'temp' };
+  if (codeText.includes('演習5') || codeText.includes('演習 5')) {
+    symbols[16] = { name: 'arr[0]', type: 'dec', size: 4 };
+    symbols[20] = { name: 'arr[1]', type: 'dec', size: 4 };
+    symbols[24] = { name: 'arr[2]', type: 'dec', size: 4 };
+    symbols[28] = { name: 'arr[3]', type: 'dec', size: 4 };
+    symbols[44] = { name: 'temp', type: 'dec', size: 4 };
+    return symbols;
   }
-  if (codeText.includes('fib(') || codeText.includes('演習7')) {
-    return { 48: 'n', 52: 'result' };
+  if (codeText.includes('演習7') || codeText.includes('演習 7')) {
+    symbols[48] = { name: 'n', type: 'dec', size: 4 };
+    symbols[52] = { name: 'result', type: 'dec', size: 4 };
+    return symbols;
   }
-  if (codeText.includes('ApiResponse') || codeText.includes('res.status') || codeText.includes('演習8')) {
-    return { 48: 'res.status', 52: 'res.size' };
+  if (codeText.includes('演習8') || codeText.includes('演習 8')) {
+    symbols[48] = { name: 'res.status', type: 'dec', size: 4 };
+    symbols[52] = { name: 'res.size', type: 'dec', size: 4 };
+    return symbols;
   }
-  if (codeText.includes('secretKey') || codeText.includes('演習6')) {
-    return { 40: 'secretKey', 44: 'originalData', 48: 'encrypted', 52: 'decrypted' };
+  if (codeText.includes('演習6') || codeText.includes('演習 6')) {
+    symbols[40] = { name: 'secretKey', type: 'hex', size: 4 };
+    symbols[44] = { name: 'originalData', type: 'dec', size: 4 };
+    symbols[48] = { name: 'encrypted', type: 'hex', size: 4 };
+    symbols[52] = { name: 'decrypted', type: 'dec', size: 4 };
+    return symbols;
   }
-  if (codeText.includes('StudioEngine') || codeText.includes('InitStudio') || codeText.includes('演習9')) {
-    return { 0: 's.isSelfHost', 68: 'studio.ver', 72: 'studio.pages' };
+  if (codeText.includes('演習9') || codeText.includes('演習 9')) {
+    symbols[0]  = { name: 's.isSelfHost', type: 'dec', size: 4 };
+    symbols[68] = { name: 'studio.ver', type: 'text', size: 4 };
+    symbols[72] = { name: 'studio.pages', type: 'dec', size: 4 };
+    return symbols;
   }
-  if (codeText.includes('arr[0] = 12') && codeText.includes('maxVal')) {
-    return { 16: 'arr[0]', 20: 'arr[1]', 24: 'arr[2]', 28: 'arr[3]', 64: 'maxVal' };
+  if (codeText.includes('演習3') || codeText.includes('演習 3')) {
+    symbols[16] = { name: 'arr[0]', type: 'dec', size: 4 };
+    symbols[20] = { name: 'arr[1]', type: 'dec', size: 4 };
+    symbols[24] = { name: 'arr[2]', type: 'dec', size: 4 };
+    symbols[28] = { name: 'arr[3]', type: 'dec', size: 4 };
+    symbols[64] = { name: 'maxVal', type: 'dec', size: 4 };
+    return symbols;
   }
-  if (codeText.includes('total = total +') || codeText.includes('演習1')) {
-    return { 0: 'i', 4: 'total' };
+  if (codeText.includes('演習1') || codeText.includes('演習 1')) {
+    symbols[0] = { name: 'i', type: 'dec', size: 4 };
+    symbols[4] = { name: 'total', type: 'dec', size: 4 };
+    return symbols;
   }
 
-  // ユーザーが編集した任意の Hike 汎用コードを動的構文解析
+  // 汎用 Hike ソースコード構文解析
   const structDefs = {};
   let currentStruct = null;
 
   const lines = codeText.split('\n');
   const varsFound = [];
+
+  function resolveTypeAndSize(typeStr) {
+    if (!typeStr) return { type: 'dec', size: 4 };
+    const t = typeStr.trim().toLowerCase();
+    if (t.includes('float64') || t.includes('double') || t.includes('f64')) {
+      return { type: 'float', size: 8, is64: true };
+    }
+    if (t.includes('float32') || t.includes('float') || t.includes('f32')) {
+      return { type: 'float', size: 4, is64: false };
+    }
+    if (t.includes('int64') || t.includes('i64') || t.includes('uint64')) {
+      return { type: 'dec', size: 8, is64: true };
+    }
+    if (t.includes('string')) {
+      return { type: 'text', size: 16, is64: false };
+    }
+    if (t.includes('*byte') || t.includes('char')) {
+      return { type: 'text', size: 4, is64: false };
+    }
+    if (t.includes('ptr') || t.includes('addr')) {
+      return { type: 'hex', size: 4, is64: false };
+    }
+    return { type: 'dec', size: 4, is64: false };
+  }
 
   for (let idx = 0; idx < lines.length; idx++) {
     const raw = lines[idx].trim();
@@ -1063,32 +1511,21 @@ function getDynamicMemorySymbolMap(codeText) {
       }
       const fieldMatch = raw.match(/^([a-zA-Z0-9_]+)\s+([a-zA-Z0-9_\*]+)/);
       if (fieldMatch) {
-        structDefs[currentStruct].push(fieldMatch[1]);
+        const info = resolveTypeAndSize(fieldMatch[2]);
+        structDefs[currentStruct].push({ name: fieldMatch[1], ...info });
       }
       continue;
     }
 
-    // 関数引数パラメータ
-    const fnMatch = raw.match(/^func\s+(?:\([^)]*\)\s*)?([a-zA-Z0-9_]+)\s*\(([^)]*)\)/);
-    if (fnMatch) {
-      const params = fnMatch[2].split(',');
-      params.forEach(p => {
-        const pName = p.trim().split(/\s+/)[0];
-        if (pName && !varsFound.includes(pName)) {
-          varsFound.push(pName);
-        }
-      });
-      continue;
-    }
-
-    // 配列変数宣言: var arr [5]int32
-    const arrMatch = raw.match(/^var\s+([a-zA-Z0-9_]+)\s*\[(\d+)\]/);
+    // 配列変数宣言: var arr [5]int32 または var buf [16]byte
+    const arrMatch = raw.match(/^var\s+([a-zA-Z0-9_]+)\s*\[(\d+)\]([a-zA-Z0-9_*]+)?/);
     if (arrMatch) {
       const arrName = arrMatch[1];
       const count = parseInt(arrMatch[2], 10);
+      const elemTypeStr = arrMatch[3] || 'int32';
+      const info = resolveTypeAndSize(elemTypeStr);
       for (let k = 0; k < count; k++) {
-        const elemName = `${arrName}[${k}]`;
-        if (!varsFound.includes(elemName)) varsFound.push(elemName);
+        varsFound.push({ name: `${arrName}[${k}]`, type: info.type, size: info.size, is64: info.is64 });
       }
       continue;
     }
@@ -1099,25 +1536,46 @@ function getDynamicMemorySymbolMap(codeText) {
       const vName = varStructMatch[1];
       const sName = varStructMatch[2];
       structDefs[sName].forEach(f => {
-        const fieldFullName = `${vName}.${f}`;
-        if (!varsFound.includes(fieldFullName)) varsFound.push(fieldFullName);
+        varsFound.push({ name: `${vName}.${f.name}`, type: f.type, size: f.size, is64: f.is64 });
       });
       continue;
     }
 
-    // 標準変数宣言: var total int32 = 0
-    const varMatch = raw.match(/^var\s+([a-zA-Z0-9_]+)/);
-    if (varMatch) {
-      const vName = varMatch[1];
-      if (!varsFound.includes(vName)) varsFound.push(vName);
+    // 型付き変数宣言: var pi float64 = 3.141592653589793
+    const varTypedMatch = raw.match(/^var\s+([a-zA-Z0-9_]+)\s+([a-zA-Z0-9_*]+)/);
+    if (varTypedMatch) {
+      const vName = varTypedMatch[1];
+      const info = resolveTypeAndSize(varTypedMatch[2]);
+      if (!varsFound.some(v => v.name === vName)) {
+        varsFound.push({ name: vName, type: info.type, size: info.size, is64: info.is64 });
+      }
       continue;
     }
 
-    // 短縮代入宣言: total := 0 または r := a % b
-    const shortMatch = raw.match(/^([a-zA-Z0-9_]+)\s*:=/);
+    // 型なし var 宣言: var total = 0
+    const varMatch = raw.match(/^var\s+([a-zA-Z0-9_]+)/);
+    if (varMatch) {
+      const vName = varMatch[1];
+      if (!varsFound.some(v => v.name === vName)) {
+        varsFound.push({ name: vName, type: 'dec', size: 4, is64: false });
+      }
+      continue;
+    }
+
+    // 短縮代入宣言: pi := 3.141592653589793 または msg := "Hello"
+    const shortMatch = raw.match(/^([a-zA-Z0-9_]+)\s*:=\s*(.+)$/);
     if (shortMatch) {
       const vName = shortMatch[1];
-      if (!varsFound.includes(vName)) varsFound.push(vName);
+      const valExpr = shortMatch[2].trim();
+      let info = { type: 'dec', size: 4, is64: false };
+      if (valExpr.startsWith('"') || valExpr.startsWith('`')) {
+        info = { type: 'text', size: 16, is64: false };
+      } else if (valExpr.includes('.')) {
+        info = { type: 'float', size: 8, is64: true };
+      }
+      if (!varsFound.some(v => v.name === vName)) {
+        varsFound.push({ name: vName, type: info.type, size: info.size, is64: info.is64 });
+      }
       continue;
     }
 
@@ -1125,39 +1583,115 @@ function getDynamicMemorySymbolMap(codeText) {
     const forMatch = raw.match(/for\s+([a-zA-Z0-9_]+)\s*:=/);
     if (forMatch) {
       const vName = forMatch[1];
-      if (!varsFound.includes(vName)) varsFound.push(vName);
+      if (!varsFound.some(v => v.name === vName)) {
+        varsFound.push({ name: vName, type: 'dec', size: 4, is64: false });
+      }
     }
   }
 
-  // 0x0000 から 4 バイトアライメントで順番にオフセット割り当て
+  // アライメントを考慮してオフセットを割り当て (4バイトまたは8バイト境界)
   let currentOffset = 0;
-  varsFound.forEach(vName => {
-    map[currentOffset] = vName;
-    currentOffset += 4;
+  varsFound.forEach(v => {
+    if (v.size >= 8 && (currentOffset % 8) !== 0) {
+      currentOffset = Math.ceil(currentOffset / 8) * 8;
+    }
+    symbols[currentOffset] = { name: v.name, type: v.type, size: v.size, is64: !!v.is64 };
+    currentOffset += v.size;
   });
 
+  return symbols;
+}
+
+// Hikeソースコードから変数シンボル名と4バイト整列のメモリ位置を動的解析 (互換API)
+function getDynamicMemorySymbolMap(codeText) {
+  if (!codeText) return {};
+  const syms = getDynamicMemorySymbols(codeText);
+  const map = {};
+  for (const off in syms) {
+    map[off] = syms[off].name;
+  }
   return map;
 }
 
-// 多行 (1行〜3行) メモリグリッド動的生成 (8カラム: +00〜+1C 完全整列)
+// 動的レスポンシブ・マルチ型メモリグリッド生成 (複数Intスパン結合 + HEX / INT / FLOAT / TEXT + ASCII列)
 function updateMemoryGridDisplay() {
   const badge = document.getElementById('hexDecBadge');
-  const toggleBtn = document.getElementById('btnHexDecToggle');
-  
-  if (badge) badge.textContent = `${memoryMode.toUpperCase()} Mode (${displayedRowsCount} Rows)`;
-  if (toggleBtn) toggleBtn.textContent = (memoryMode === 'hex') ? '🔢 16進数 (HEX)' : '🔢 10進数 (DEC)';
-
+  const wrapper = document.getElementById('memoryGridWrapper');
+  const thead = document.getElementById('memoryHeader');
   const tbody = document.getElementById('memoryBody');
   if (!tbody) return;
-  tbody.innerHTML = '';
 
+  // 1. パネル幅に応じた列数 (4列 / 8列 / 16列) の動的計算
+  const wrapperWidth = wrapper ? wrapper.clientWidth : 500;
+  const asciiColWidth = showAsciiColumn ? 110 : 0;
+  const availWidth = Math.max(160, wrapperWidth - 65 - asciiColWidth);
+
+  let colCount = 8;
+  if (availWidth < 420) {
+    colCount = 4;   // 16バイト/行 (+00〜+0C)
+  } else if (availWidth >= 800) {
+    colCount = 16;  // 64バイト/行 (+00〜+3C)
+  } else {
+    colCount = 8;   // 32バイト/行 (+00〜+1C)
+  }
+
+  const bytesPerRow = colCount * 4;
+
+  // 2. パネル高さに応じた行数の動的計算
+  let activeRows = 3;
+  if (displayedRowsSetting === 'auto') {
+    const panelBody = document.querySelector('#panel-memory .panel-body') || document.querySelector('#popoutBodyMount .panel-body');
+    const bodyHeight = panelBody ? panelBody.clientHeight : 320;
+    const watchList = document.getElementById('watchList');
+    const watchHeight = watchList ? watchList.offsetHeight : 80;
+    const availableHeight = Math.max(80, bodyHeight - watchHeight - 75);
+    activeRows = Math.max(1, Math.min(16, Math.floor(availableHeight / 48)));
+  } else if (displayedRowsSetting === 'all') {
+    activeRows = 8;
+  } else {
+    activeRows = parseInt(displayedRowsSetting, 10) || 3;
+  }
+  displayedRowsCount = activeRows;
+
+  // 3. バッジ更新
+  if (badge) {
+    const modeName = memoryMode === 'auto'
+      ? (currentLang === 'ja' ? 'ブロック連動' : 'Block-Auto')
+      : memoryMode.toUpperCase();
+    const spanName = (memorySpanSetting === 'auto')
+      ? (currentLang === 'ja' ? '自動' : 'Auto')
+      : `${memorySpanSetting}B`;
+    badge.textContent = `${modeName} [${spanName}]`;
+  }
+
+  // 4. thead の動的構築
+  if (thead) {
+    let headerHtml = '<tr><th class="col-offset">Offset</th>';
+    for (let c = 0; c < colCount; c++) {
+      const offHex = (c * 4).toString(16).padStart(2, '0').toUpperCase();
+      headerHtml += `<th class="col-cell">+${offHex}</th>`;
+    }
+    if (showAsciiColumn) {
+      headerHtml += '<th class="col-ascii">ASCII</th>';
+    }
+    headerHtml += '</tr>';
+    thead.innerHTML = headerHtml;
+  }
+
+  // 5. tbody の動的構築
+  tbody.innerHTML = '';
   const hikeCodeEl = document.getElementById('hikeCode');
   const codeText = hikeCodeEl ? hikeCodeEl.value : '';
-  const dynamicSymbolMap = getDynamicMemorySymbolMap(codeText);
+  const dynamicSymbols = getDynamicMemorySymbols(codeText);
+  const dynamicSymbolMap = {};
+  for (const off in dynamicSymbols) {
+    dynamicSymbolMap[off] = dynamicSymbols[off].name;
+  }
 
-  // 1行あたり32バイト (8カラム: +00, +04, +08, +0C, +10, +14, +18, +1C)
-  const rowOffsets = [0, 32, 64].slice(0, displayedRowsCount);
-  const colOffsets = [0, 4, 8, 12, 16, 20, 24, 28];
+  const rowOffsets = [];
+  for (let r = 0; r < activeRows; r++) {
+    rowOffsets.push(r * bytesPerRow);
+  }
 
   rowOffsets.forEach(rowAddr => {
     const tr = document.createElement('tr');
@@ -1166,38 +1700,192 @@ function updateMemoryGridDisplay() {
     tdAddr.textContent = `0x00${rowAddr.toString(16).padStart(2, '0').toUpperCase()}`;
     tr.appendChild(tdAddr);
 
-    colOffsets.forEach(colOff => {
+    let c = 0;
+    while (c < colCount) {
+      const colOff = c * 4;
       const absOff = rowAddr + colOff;
       const hexOff = absOff.toString(16);
+
+      const symInfo = dynamicSymbols[absOff];
+      const varName = symInfo ? symInfo.name : (dynamicSymbolMap[absOff] || '-');
+
+      // スパン数の算出 (1セル = 4バイト)
+      let span = 1;
+      if (memorySpanSetting === '8') {
+        span = 2;
+      } else if (memorySpanSetting === 'auto' && symInfo && symInfo.size > 4) {
+        span = Math.floor(symInfo.size / 4);
+      }
+
+      // 行末を超えないようクランプ (行折り返し保護)
+      const maxSpanInRow = colCount - c;
+      const actualSpan = Math.max(1, Math.min(span, maxSpanInRow));
+      const byteLen = actualSpan * 4;
+
       const td = document.createElement('td');
       td.id = `m-${hexOff}`;
-      
-      const isChanged = virtualMem.changedOffsets.has(absOff) || (currentDebugMemState && currentDebugMemState[absOff] !== undefined);
-      // 仮想リニアメモリ DataView から 32ビット整数値を直接読み出し
-      const rawVal = virtualMem.readI32(absOff);
-      td.setAttribute('data-raw', rawVal);
-      if (isChanged) td.className = 'memory-val-changed';
-      
-      let formattedVal = '';
-      if (memoryMode === 'hex') {
-        formattedVal = (rawVal >>> 0).toString(16).padStart(8, '0').toUpperCase();
-      } else {
-        formattedVal = rawVal.toString(10);
+      td.className = 'memory-cell';
+      if (actualSpan > 1) {
+        td.colSpan = actualSpan;
+        td.classList.add('memory-cell-spanned');
       }
-      const varName = dynamicSymbolMap[absOff] || '-';
-      
-      td.innerHTML = `<div class="cell-val">${formattedVal}</div><div class="cell-var-name">${varName}</div>`;
-      td.title = `Address 0x00${absOff.toString(16).padStart(2, '0').toUpperCase()} : 変数 '${varName}' の記憶領域`;
+
+      // 結合されたバイト範囲のいずれかが変更されたかを判定
+      let isChanged = false;
+      for (let b = 0; b < byteLen; b++) {
+        const off = absOff + b;
+        if (virtualMem.changedOffsets.has(off) || (currentDebugMemState && currentDebugMemState[off] !== undefined)) {
+          isChanged = true;
+          break;
+        }
+      }
+      if (isChanged) td.classList.add('memory-val-changed');
+
+      // 決定されるブロック形式 (セル個別オーバーライド > グローバル設定 > 自動型連動)
+      let cellMode = cellFormatOverrides.get(absOff);
+      if (!cellMode) {
+        if (memoryMode === 'auto') {
+          cellMode = symInfo ? symInfo.type : inferBlockType(absOff, varName, codeText);
+        } else {
+          cellMode = memoryMode;
+        }
+      }
+
+      // 値の読み出しとフォーマット (byteLen に応じたレンダリング)
+      let formattedVal = '';
+      const rawI32 = virtualMem.readI32(absOff);
+      const rawI64 = (byteLen >= 8) ? virtualMem.readI64(absOff) : 0n;
+      const rawF32 = virtualMem.readF32(absOff);
+      const rawF64 = (byteLen >= 8) ? virtualMem.readF64(absOff) : 0.0;
+      td.setAttribute('data-raw', rawI32);
+
+      if (actualSpan === 1) {
+        // --- 4バイト単一セル ---
+        if (cellMode === 'hex') {
+          const hex8 = (rawI32 >>> 0).toString(16).padStart(8, '0').toUpperCase();
+          formattedVal = `<span class="hex-word">${hex8.slice(0, 4)}</span><span class="hex-word">${hex8.slice(4)}</span>`;
+        } else if (cellMode === 'dec') {
+          formattedVal = rawI32.toString(10);
+        } else if (cellMode === 'float') {
+          if (isNaN(rawF32)) formattedVal = 'NaN';
+          else if (!isFinite(rawF32)) formattedVal = rawF32 > 0 ? '+Inf' : '-Inf';
+          else if (rawF32 === 0) formattedVal = '0.0';
+          else if (Math.abs(rawF32) >= 1e6 || (Math.abs(rawF32) < 1e-4 && rawF32 !== 0)) formattedVal = rawF32.toExponential(2);
+          else formattedVal = parseFloat(rawF32.toPrecision(5)).toString();
+        } else if (cellMode === 'text') {
+          let cellStr = '';
+          for (let b = 0; b < 4; b++) {
+            const byte = virtualMem.readI8(absOff + b);
+            cellStr += (byte >= 32 && byte <= 126) ? String.fromCharCode(byte) : '·';
+          }
+          formattedVal = `"${cellStr}"`;
+        }
+      } else if (actualSpan === 2) {
+        // --- 8バイト結合セル (Float64 / Int64 / Hex16 / Text8) ---
+        if (cellMode === 'float') {
+          if (isNaN(rawF64)) formattedVal = 'NaN';
+          else if (!isFinite(rawF64)) formattedVal = rawF64 > 0 ? '+Inf' : '-Inf';
+          else if (rawF64 === 0) formattedVal = '0.0';
+          else if (Math.abs(rawF64) >= 1e10 || (Math.abs(rawF64) < 1e-4 && rawF64 !== 0)) formattedVal = rawF64.toExponential(4);
+          else formattedVal = parseFloat(rawF64.toPrecision(8)).toString();
+        } else if (cellMode === 'dec') {
+          formattedVal = rawI64.toString(10);
+        } else if (cellMode === 'hex') {
+          const hi = (virtualMem.readI32(absOff + 4) >>> 0).toString(16).padStart(8, '0').toUpperCase();
+          const lo = (virtualMem.readI32(absOff) >>> 0).toString(16).padStart(8, '0').toUpperCase();
+          formattedVal = `<span class="hex-word">${hi}</span><span class="hex-word">${lo}</span>`;
+        } else if (cellMode === 'text') {
+          const str = virtualMem.readString(absOff, 8);
+          formattedVal = `"${str || '········'}"`;
+        }
+      } else {
+        // --- 16バイト以上 (文字列バッファ・長大スパン) ---
+        if (cellMode === 'text') {
+          const str = virtualMem.readString(absOff, byteLen);
+          formattedVal = `"${str}"`;
+        } else if (cellMode === 'hex') {
+          let hexSeq = '';
+          for (let b = 0; b < Math.min(8, byteLen); b++) {
+            hexSeq += virtualMem.readI8(absOff + b).toString(16).padStart(2, '0').toUpperCase() + ' ';
+          }
+          formattedVal = hexSeq.trim() + '...';
+        } else {
+          formattedVal = `${byteLen}B [${cellMode.toUpperCase()}]`;
+        }
+      }
+
+      // ASCIIプレビュー用文字列
+      let charSeq = '';
+      for (let b = 0; b < byteLen; b++) {
+        const byte = virtualMem.readI8(absOff + b);
+        charSeq += (byte >= 32 && byte <= 126) ? String.fromCharCode(byte) : '·';
+      }
+
+      const sizeLabel = `${byteLen}B`;
+      td.innerHTML = `
+        <div class="cell-val ${cellMode === 'hex' ? 'cell-val-hex' : ''}">${formattedVal}</div>
+        <div class="cell-footer">
+          <div class="cell-var-name" title="${varName}">${varName}</div>
+          <div class="cell-mode-tag cell-mode-${cellMode}" title="クリックでこのブロックの形式を切替">${cellMode.toUpperCase()} (${sizeLabel})</div>
+        </div>
+      `;
+
+      let tooltip = `0x00${absOff.toString(16).padStart(2, '0').toUpperCase()} : [${varName}] (${sizeLabel}, ${cellMode.toUpperCase()})\n`;
+      if (byteLen >= 8) {
+        tooltip += `Float64: ${rawF64}\nInt64: ${rawI64}\n`;
+      }
+      tooltip += `Hex: 0x${(rawI32 >>> 0).toString(16).padStart(8, '0').toUpperCase()}\nDec: ${rawI32}\nASCII: "${charSeq}"\n※クリックでブロック表示形式を切替`;
+      td.title = tooltip;
+
+      td.addEventListener('click', () => {
+        toggleCellBlockFormat(absOff, cellMode, actualSpan);
+      });
+
       tr.appendChild(td);
-    });
+      c += actualSpan;
+    }
+
+    // ASCIIプレビュー列の追加
+    if (showAsciiColumn) {
+      const tdAscii = document.createElement('td');
+      tdAscii.className = 'memory-ascii';
+      let rowAscii = '';
+      for (let b = 0; b < bytesPerRow; b++) {
+        const byte = virtualMem.readI8(rowAddr + b);
+        rowAscii += (byte >= 32 && byte <= 126) ? String.fromCharCode(byte) : '·';
+      }
+      tdAscii.textContent = rowAscii;
+      tdAscii.title = `Offset 0x00${rowAddr.toString(16).padStart(2, '0').toUpperCase()} ASCII: "${rowAscii}"`;
+      tr.appendChild(tdAscii);
+    }
 
     tbody.appendChild(tr);
   });
 }
 
 function toggleHexDecMode() {
-  memoryMode = (memoryMode === 'hex') ? 'dec' : 'hex';
-  updateMemoryGridDisplay();
+  const modes = ['auto', 'hex', 'dec', 'float', 'text'];
+  const nextIdx = (modes.indexOf(memoryMode) + 1) % modes.length;
+  setMemoryMode(modes[nextIdx]);
+}
+
+let memoryResizeObserverInstance = null;
+function initMemoryResizeObserver() {
+  const panelMem = document.getElementById('panel-memory');
+  if (!panelMem || typeof ResizeObserver === 'undefined') return;
+
+  if (memoryResizeObserverInstance) {
+    memoryResizeObserverInstance.disconnect();
+  }
+
+  let resizeTimer = null;
+  memoryResizeObserverInstance = new ResizeObserver(() => {
+    if (resizeTimer) clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => {
+      updateMemoryGridDisplay();
+    }, 60);
+  });
+  memoryResizeObserverInstance.observe(panelMem);
 }
 
 // デバッグ制御
@@ -1221,7 +1909,7 @@ function startAutoStepDebug() {
   isAutoStepping = true;
   const btn = document.getElementById('btnDebugAutoStep');
   if (btn) {
-    btn.textContent = (currentLang === 'ja') ? '⏸️ ポーズ' : '⏸️ Pause';
+    btn.textContent = (currentLang === 'ja') ? '一時停止' : 'Pause';
     btn.classList.add('active-auto-step');
   }
 
@@ -1248,7 +1936,7 @@ function pauseAutoStepDebug() {
   }
   const btn = document.getElementById('btnDebugAutoStep');
   if (btn) {
-    btn.textContent = (currentLang === 'ja') ? '⏯️ 自動' : '⏯️ Auto';
+    btn.textContent = (currentLang === 'ja') ? '自動' : 'Auto';
     btn.classList.remove('active-auto-step');
   }
 }
@@ -1265,6 +1953,13 @@ function startStepDebug() {
   document.getElementById('btnDebugNext').disabled = false;
   document.getElementById('btnDebugContinue').disabled = false;
   document.getElementById('btnDebugReset').disabled = false;
+
+  const quickStep = document.getElementById('btnQuickStep');
+  if (quickStep) {
+    quickStep.classList.remove('hidden');
+    quickStep.disabled = false;
+  }
+
   document.getElementById('debugStepBadge').textContent = 'Debugging (WASM)';
   document.getElementById('debugStepBadge').className = 'status-tag log-warn';
 
@@ -1341,7 +2036,8 @@ function updateBlueMarker(hikeLine) {
     const lineHl = document.getElementById('lineHighlight');
 
     if (hikeCodeEl) {
-      const lineHeight = 21.2;
+      const scale = fontSizeScaleMap[currentFontSize] || 1;
+      const lineHeight = 21.2 * scale;
       const targetY = (lineToHighlight - 1) * lineHeight;
 
       if (lineHl) {
@@ -1383,23 +2079,33 @@ function setCompilerBackend(backend) {
   const badge = document.getElementById('backendBadge');
   if (badge) {
     if (backend === 'wabt') {
-      badge.textContent = 'WAT/WABT 1:1';
+      badge.textContent = 'WAT';
       badge.style.background = 'rgba(16, 185, 129, 0.15)';
       badge.style.color = '#10b981';
       badge.style.borderColor = '#10b981';
-      badge.title = 'WAT/WABT 直結パイプライン稼働中: ソース行とWasm命令が1対1完全同期';
+      badge.title = 'WAT/WABT (標準)';
     } else {
-      badge.textContent = 'LLVM IR';
+      badge.textContent = 'LLVM';
       badge.style.background = 'rgba(234, 179, 8, 0.15)';
       badge.style.color = '#eab308';
       badge.style.borderColor = '#eab308';
-      badge.title = 'LLVM IR 最適化パイプライン稼働中';
+      badge.title = 'LLVM IR (最適化)';
     }
   }
   const selectEl = document.getElementById('selectCompilerBackend');
   if (selectEl && selectEl.value !== backend) {
     selectEl.value = backend;
   }
+  const labelEl = document.getElementById('currentCompilerLabel');
+  if (labelEl) {
+    labelEl.textContent = (backend === 'wabt')
+      ? (i18n[currentLang]?.opt_backend_wabt || '標準 (WAT)')
+      : (i18n[currentLang]?.opt_backend_llvm || '最適化 (LLVM -O3)');
+    labelEl.setAttribute('data-i18n', (backend === 'wabt') ? 'opt_backend_wabt' : 'opt_backend_llvm');
+  }
+  document.querySelectorAll('.compiler-opt-item').forEach(b => {
+    b.classList.toggle('active', b.getAttribute('data-value') === backend);
+  });
   updateWasmCodeDisplay(true);
 }
 
@@ -1509,10 +2215,12 @@ function renderDebugStep(stepIndex) {
   // 3. 動的スコープ変数の更新 (Watch Panel)
   const watchListEl = document.getElementById('watchList');
   if (watchListEl && snapshot.vars) {
-    const bpListStr = Array.from(breakpointsSet).sort((a,b) => a-b).map(n => `Line ${n}`).join(', ');
+    const lineLabel = currentLang === 'ja' ? '実行行' : 'Line';
+    const bpLabel = currentLang === 'ja' ? 'ブレークポイント' : 'Breakpoints';
+    const noneText = currentLang === 'ja' ? '(なし)' : '(none)';
     let html = `
-      <div class="watch-item"><span class="watch-name">実行中の行 (Line)</span><span class="watch-val">Line ${targetHikeLine}</span></div>
-      <div class="watch-item"><span class="watch-name">設置済BPリスト (Breakpoints)</span><span class="watch-val" style="color: var(--accent-red);">${bpListStr ? `[${bpListStr}]` : '(なし)'}</span></div>
+      <div class="watch-item"><span class="watch-name">${lineLabel}</span><span class="watch-val">Line ${targetHikeLine}</span></div>
+      <div class="watch-item"><span class="watch-name">${bpLabel}</span><span class="watch-val" style="color: var(--accent-red);">${bpListStr ? `[${bpListStr}]` : noneText}</span></div>
     `;
 
     for (let key in snapshot.vars) {
@@ -1521,9 +2229,16 @@ function renderDebugStep(stepIndex) {
       const formattedVal = (typeof val === 'number' && val > 255)
         ? `${val} (0x${val.toString(16).toUpperCase()})`
         : (typeof val === 'number' ? `${val}` : String(val));
-      html += `<div class="watch-item"><span class="watch-name">${key}</span><span class="watch-val" style="color: var(--accent-green); font-weight: 600;">${formattedVal}</span></div>`;
+      html += `<div class="watch-item clickable" data-var-name="${key}" title="クリックしてメモリ位置と型表示を連動"><span class="watch-name">${key}</span><span class="watch-val" style="color: var(--accent-green); font-weight: 600;">${formattedVal}</span></div>`;
     }
     watchListEl.innerHTML = html;
+
+    watchListEl.querySelectorAll('.watch-item.clickable').forEach(item => {
+      item.addEventListener('click', () => {
+        const vName = item.getAttribute('data-var-name');
+        if (vName) handleWatchItemClick(vName);
+      });
+    });
   }
 
   // 4. サーバー通知 & コールバック出力
@@ -1537,6 +2252,12 @@ function renderDebugStep(stepIndex) {
       virtualMem.writeI32(snapshot.memAction.offset, snapshot.memAction.value);
     } else if (snapshot.memAction.op === 'STORE8') {
       virtualMem.writeI8(snapshot.memAction.offset, snapshot.memAction.value);
+    } else if (snapshot.memAction.op === 'STORE_F64') {
+      virtualMem.writeF64(snapshot.memAction.offset, snapshot.memAction.value);
+    } else if (snapshot.memAction.op === 'STORE_I64') {
+      virtualMem.writeI64(snapshot.memAction.offset, snapshot.memAction.value);
+    } else if (snapshot.memAction.op === 'STORE_STRING') {
+      virtualMem.writeString(snapshot.memAction.offset, snapshot.memAction.value);
     }
   }
 
@@ -1580,6 +2301,12 @@ function resetStepDebug() {
   const btnReset = document.getElementById('btnDebugReset');
   if (btnReset) btnReset.disabled = true;
 
+  const quickStep = document.getElementById('btnQuickStep');
+  if (quickStep) {
+    quickStep.classList.add('hidden');
+    quickStep.disabled = true;
+  }
+
   const badge = document.getElementById('debugStepBadge');
   if (badge) {
     badge.textContent = 'Stopped';
@@ -1622,6 +2349,12 @@ function finishStepDebug() {
   if (btnCont) btnCont.disabled = true;
   const btnReset = document.getElementById('btnDebugReset');
   if (btnReset) btnReset.disabled = true;
+
+  const quickStepFinish = document.getElementById('btnQuickStep');
+  if (quickStepFinish) {
+    quickStepFinish.classList.add('hidden');
+    quickStepFinish.disabled = true;
+  }
   
   const badge = document.getElementById('debugStepBadge');
   if (badge) {
@@ -1720,7 +2453,7 @@ function runWasm() {
     log(currentLang === 'ja' ? `[仮想サーバー通知] HTTP/1.1 200 OK - Remote Wasm Engine ハンドシェイク成功 (Latency: 1.2ms)` : `[Server Output] HTTP/1.1 200 OK - Remote Wasm handshake OK (1.2ms)`, 'success');
   }
 
-  if (codeText.includes('strPtr') || codeText.includes('HIKE') || codeText.includes('演習2')) {
+  if (codeText.includes('strPtr') || codeText.includes('演習2') || codeText.includes('演習 2')) {
     log(currentLang === 'ja' ? '[コンソール出力] 先頭文字: H (ASCII: 0x48)\n[コンソール出力] 2番目の文字: I (ASCII: 0x49)' : '[Console Output] First Char: H (ASCII: 0x48)\n[Console Output] Second Char: I (ASCII: 0x49)', 'success');
     currentDebugMemState = { 0: 8, 4: 72, 8: 73, 9: 75, 10: 69 };
     updateMemoryGridDisplay();
@@ -1798,14 +2531,28 @@ function setMode(mode) {
   document.getElementById('advancedPanel').classList.add('hidden');
   document.getElementById('serverPanel').classList.add('hidden');
 
+  const modeBadge = document.getElementById('activeModeIndicator');
+
   if (mode === 'standard') {
     document.getElementById('modeStandard').classList.add('active');
+    if (modeBadge) {
+      modeBadge.setAttribute('data-i18n', 'mode_standard');
+      modeBadge.textContent = i18n[currentLang]?.mode_standard || 'フリー';
+    }
   } else if (mode === 'server') {
     document.getElementById('modeServer').classList.add('active');
     document.getElementById('serverPanel').classList.remove('hidden');
+    if (modeBadge) {
+      modeBadge.setAttribute('data-i18n', 'mode_server');
+      modeBadge.textContent = i18n[currentLang]?.mode_server || '仮想サーバー連携';
+    }
   } else if (mode === 'advanced') {
     document.getElementById('modeAdvanced').classList.add('active');
     document.getElementById('advancedPanel').classList.remove('hidden');
+    if (modeBadge) {
+      modeBadge.setAttribute('data-i18n', 'mode_advanced');
+      modeBadge.textContent = i18n[currentLang]?.mode_advanced || 'アドバンス';
+    }
   }
   resetStepDebug();
 }
@@ -2570,6 +3317,7 @@ document.getElementById('btnDebugAutoStep').addEventListener('click', toggleAuto
 document.getElementById('btnDebugContinue').addEventListener('click', continueStepDebug);
 document.getElementById('btnDebugReset').addEventListener('click', resetStepDebug);
 document.getElementById('btnRowsToggle').addEventListener('click', toggleMemoryRows);
+document.getElementById('btnSpanToggle')?.addEventListener('click', toggleMemorySpan);
 document.getElementById('btnHexDecToggle').addEventListener('click', toggleHexDecMode);
 
 const btnManualEl = document.getElementById('btnManual');
@@ -2629,6 +3377,186 @@ if (btnThemeToggleEl) btnThemeToggleEl.addEventListener('click', toggleTheme);
 document.getElementById('btnLangToggle').addEventListener('click', () => {
   const nextLang = currentLang === 'ja' ? 'en' : 'ja';
   applyLanguage(nextLang);
+});
+
+// ==========================================
+// パネル別ウィンドウ切り離し（ポップアウト）＆合流（ドッキング）管理
+// ==========================================
+class PanelPopoutManager {
+  constructor() {
+    this.popouts = new Map(); // panelId -> { win, panel, body, placeholder }
+  }
+
+  isPopoutOpen(panelId) {
+    const entry = this.popouts.get(panelId);
+    return !!(entry && entry.win && !entry.win.closed);
+  }
+
+  popout(panelId) {
+    if (this.isPopoutOpen(panelId)) {
+      const entry = this.popouts.get(panelId);
+      entry.win.focus();
+      return;
+    }
+
+    const panel = document.getElementById(panelId);
+    if (!panel) return;
+    const body = panel.querySelector('.panel-body');
+    if (!body) return;
+
+    const titleEl = panel.querySelector('.panel-content-select');
+    const panelTitle = titleEl ? (titleEl.options[titleEl.selectedIndex]?.text || panelId) : panelId;
+
+    // 子ウィンドウ作成
+    const width = Math.min((window.screen && window.screen.availWidth) || 900, 880);
+    const height = Math.min((window.screen && window.screen.availHeight) || 700, 640);
+    const left = (window.screenX || 0) + 50;
+    const top = (window.screenY || 0) + 50;
+    const features = `width=${width},height=${height},left=${left},top=${top},menubar=no,toolbar=no,location=no,status=no`;
+
+    const win = window.open('', `hike_popout_${panelId}`, features);
+    if (!win) {
+      alert(currentLang === 'ja'
+        ? 'ポップアップウィンドウの作成がブラウザによってブロックされました。ポップアップを許可してください。'
+        : 'Pop-up window was blocked by browser. Please allow popups for this site.');
+      return;
+    }
+
+    win.document.title = `${panelTitle} - Hike Web Studio`;
+
+    // 親ドキュメントの属性とCSSの継承
+    win.document.documentElement.setAttribute('data-theme', document.documentElement.getAttribute('data-theme') || 'dark');
+    win.document.documentElement.style.setProperty('--font-scale', document.documentElement.style.getPropertyValue('--font-scale') || '1.0');
+
+    document.querySelectorAll('link[rel="stylesheet"], style').forEach(node => {
+      win.document.head.appendChild(node.cloneNode(true));
+    });
+
+    const mergeText = i18n[currentLang]?.btn_merge || '合流して戻す';
+    const activeText = i18n[currentLang]?.popout_active_msg || '別ウィンドウで表示中';
+
+    win.document.body.className = 'popout-window-root';
+    win.document.body.innerHTML = `
+      <div class="popout-window-header">
+        <div class="popout-window-title">
+          <span>⤢</span>
+          <span id="popoutHeaderTitle">${panelTitle}</span>
+        </div>
+        <button id="btnPopoutMergeBack" class="btn-sm btn-placeholder-merge" title="${mergeText}">⤡ ${mergeText}</button>
+      </div>
+      <div class="popout-window-body" id="popoutBodyMount"></div>
+    `;
+
+    // panel-body を子ウィンドウへ移送
+    const mount = win.document.getElementById('popoutBodyMount');
+    mount.appendChild(body);
+
+    // メイン画面の元枠にプレースホルダーカードを挿入
+    const placeholder = document.createElement('div');
+    placeholder.className = 'popout-placeholder';
+    placeholder.innerHTML = `
+      <div class="popout-placeholder-icon">⤢</div>
+      <div class="popout-placeholder-text">${panelTitle}: ${activeText}</div>
+      <button class="btn-placeholder-merge btn-main-merge">⤡ ${mergeText}</button>
+    `;
+    panel.appendChild(placeholder);
+
+    // 合流ボタンハンドラ接続
+    win.document.getElementById('btnPopoutMergeBack')?.addEventListener('click', () => {
+      this.mergeBack(panelId, true);
+    });
+    placeholder.querySelector('.btn-main-merge')?.addEventListener('click', () => {
+      this.mergeBack(panelId, true);
+    });
+
+    // 子ウィンドウが閉じられた時の自動合流ハンドラ
+    win.addEventListener('beforeunload', () => {
+      this.mergeBack(panelId, false);
+    });
+
+    this.popouts.set(panelId, { win, panel, body, placeholder });
+
+    // メイン枠のボタン状態更新
+    const popoutBtn = panel.querySelector('.btn-panel-popout');
+    if (popoutBtn) {
+      popoutBtn.classList.add('active');
+      popoutBtn.title = mergeText;
+    }
+
+    // レイアウト再描画
+    setTimeout(() => {
+      if (panelId === 'panel-memory') updateMemoryGridDisplay();
+      if (panelId === 'panel-editor' && typeof syncEditorDimensions === 'function') syncEditorDimensions();
+    }, 60);
+
+    const logMsg = currentLang === 'ja'
+      ? `[パネル分離] 「${panelTitle}」を別ウィンドウに切り離しました。`
+      : `[Popout] Popped out "${panelTitle}" to separate window.`;
+    log(logMsg, 'info');
+  }
+
+  mergeBack(panelId, shouldCloseWindow = true) {
+    const entry = this.popouts.get(panelId);
+    if (!entry) return;
+
+    const { win, panel, body, placeholder } = entry;
+
+    // DOM要素をメイン画面へ復元
+    if (placeholder && placeholder.parentNode) {
+      placeholder.remove();
+    }
+    if (body) {
+      panel.appendChild(body);
+    }
+
+    const popoutBtn = panel.querySelector('.btn-panel-popout');
+    if (popoutBtn) {
+      popoutBtn.classList.remove('active');
+      popoutBtn.title = i18n[currentLang]?.btn_popout || '別ウィンドウで開く (切り離し)';
+    }
+
+    if (shouldCloseWindow && win && !win.closed) {
+      try {
+        win.close();
+      } catch (e) {}
+    }
+
+    this.popouts.delete(panelId);
+
+    // レイアウト復元
+    setTimeout(() => {
+      if (panelId === 'panel-memory') updateMemoryGridDisplay();
+      if (panelId === 'panel-editor' && typeof syncEditorDimensions === 'function') syncEditorDimensions();
+      if (typeof checkAllHeaderOverflows === 'function') checkAllHeaderOverflows();
+    }, 60);
+
+    const titleEl = panel.querySelector('.panel-content-select');
+    const panelTitle = titleEl ? (titleEl.options[titleEl.selectedIndex]?.text || panelId) : panelId;
+    const logMsg = currentLang === 'ja'
+      ? `[パネル合流] 「${panelTitle}」をメイン画面に合流して戻しました。`
+      : `[Dock] Merged "${panelTitle}" back to main window.`;
+    log(logMsg, 'info');
+  }
+
+  syncThemeAndScale(theme, scale) {
+    this.popouts.forEach(entry => {
+      if (entry.win && !entry.win.closed) {
+        entry.win.document.documentElement.setAttribute('data-theme', theme);
+        entry.win.document.documentElement.style.setProperty('--font-scale', scale);
+      }
+    });
+  }
+
+  closeAll() {
+    this.popouts.forEach((entry, panelId) => {
+      this.mergeBack(panelId, true);
+    });
+  }
+}
+
+const popoutManager = new PanelPopoutManager();
+window.addEventListener('beforeunload', () => {
+  if (popoutManager) popoutManager.closeAll();
 });
 
 // パネルのドラッグ＆ドロップ入れ替えおよび折りたたみ（たたみ）制御の初期化
@@ -2721,19 +3649,34 @@ function initPanelInteractions() {
       }
     });
 
-    // 6. 折りたたみ (ヘッダーダブルクリック または ➖/➕ ボタン)
+    // 6. 別ウィンドウ切り離し (ポップアウト) ボタン
+    const popoutBtn = panel.querySelector('.btn-panel-popout');
+    if (popoutBtn) {
+      popoutBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (typeof popoutManager !== 'undefined' && popoutManager) {
+          if (popoutManager.isPopoutOpen(panel.id)) {
+            popoutManager.mergeBack(panel.id, true);
+          } else {
+            popoutManager.popout(panel.id);
+          }
+        }
+      });
+    }
+
+    // 7. 折りたたみ (ヘッダーダブルクリック または −/+ ボタン)
     const header = panel.querySelector('.panel-header');
     const toggleBtn = panel.querySelector('.btn-panel-toggle');
 
     const toggleCollapse = (e) => {
-      if (e && e.target && (e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') && !e.target.classList.contains('btn-panel-toggle')) {
+      if (e && e.target && (e.target.closest('button') || e.target.closest('.nav-menu-item') || e.target.closest('select') || e.target.closest('input')) && !e.target.closest('.btn-panel-toggle')) {
         return;
       }
       
       panel.classList.remove('auto-overflow-collapsed');
       const isCollapsed = panel.classList.toggle('collapsed');
       if (toggleBtn) {
-        toggleBtn.textContent = isCollapsed ? '➕' : '➖';
+        toggleBtn.textContent = isCollapsed ? '+' : '−';
       }
       const titleSpan = panel.querySelector('.panel-title-wrapper span[data-i18n]') || panel.querySelector('.panel-title-wrapper span');
       const title = titleSpan ? titleSpan.textContent : panel.id;
@@ -2791,7 +3734,7 @@ function initSplitterInteractions() {
           document.querySelectorAll('.cell-top-left, .cell-bottom-left').forEach(p => {
             p.classList.add('collapsed');
             const btn = p.querySelector('.btn-panel-toggle');
-            if (btn) btn.textContent = '➕';
+            if (btn) btn.textContent = '+';
           });
           log(currentLang === 'ja' ? '[自動最小化] 幅10%以下のため左側パネルを折りたたみました。' : '[Auto Minimize] Left panels auto-collapsed (≤10%).', 'info');
         }
@@ -2801,7 +3744,7 @@ function initSplitterInteractions() {
           document.querySelectorAll('.cell-top-left, .cell-bottom-left').forEach(p => {
             p.classList.remove('collapsed');
             const btn = p.querySelector('.btn-panel-toggle');
-            if (btn) btn.textContent = '➖';
+            if (btn) btn.textContent = '−';
           });
         }
       }
@@ -2813,7 +3756,7 @@ function initSplitterInteractions() {
           document.querySelectorAll('.cell-top-right, .cell-bottom-right').forEach(p => {
             p.classList.add('collapsed');
             const btn = p.querySelector('.btn-panel-toggle');
-            if (btn) btn.textContent = '➕';
+            if (btn) btn.textContent = '+';
           });
           log(currentLang === 'ja' ? '[自動最小化] 幅10%以下のため右側パネルを折りたたみました。' : '[Auto Minimize] Right panels auto-collapsed (≤10%).', 'info');
         }
@@ -2823,7 +3766,7 @@ function initSplitterInteractions() {
           document.querySelectorAll('.cell-top-right, .cell-bottom-right').forEach(p => {
             p.classList.remove('collapsed');
             const btn = p.querySelector('.btn-panel-toggle');
-            if (btn) btn.textContent = '➖';
+            if (btn) btn.textContent = '−';
           });
         }
       }
@@ -2843,7 +3786,7 @@ function initSplitterInteractions() {
           document.querySelectorAll('.cell-top-left, .cell-top-right').forEach(p => {
             p.classList.add('collapsed');
             const btn = p.querySelector('.btn-panel-toggle');
-            if (btn) btn.textContent = '➕';
+            if (btn) btn.textContent = '+';
           });
           log(currentLang === 'ja' ? '[自動最小化] 高さ10%以下のため上側パネルを折りたたみました。' : '[Auto Minimize] Top panels auto-collapsed (≤10%).', 'info');
         }
@@ -2853,7 +3796,7 @@ function initSplitterInteractions() {
           document.querySelectorAll('.cell-top-left, .cell-top-right').forEach(p => {
             p.classList.remove('collapsed');
             const btn = p.querySelector('.btn-panel-toggle');
-            if (btn) btn.textContent = '➖';
+            if (btn) btn.textContent = '−';
           });
         }
       }
@@ -2865,7 +3808,7 @@ function initSplitterInteractions() {
           document.querySelectorAll('.cell-bottom-left, .cell-bottom-right').forEach(p => {
             p.classList.add('collapsed');
             const btn = p.querySelector('.btn-panel-toggle');
-            if (btn) btn.textContent = '➕';
+            if (btn) btn.textContent = '+';
           });
           log(currentLang === 'ja' ? '[自動最小化] 高さ10%以下のため下側パネルを折りたたみました。' : '[Auto Minimize] Bottom panels auto-collapsed (≤10%).', 'info');
         }
@@ -2875,7 +3818,7 @@ function initSplitterInteractions() {
           document.querySelectorAll('.cell-bottom-left, .cell-bottom-right').forEach(p => {
             p.classList.remove('collapsed');
             const btn = p.querySelector('.btn-panel-toggle');
-            if (btn) btn.textContent = '➖';
+            if (btn) btn.textContent = '−';
           });
         }
       }
@@ -2986,9 +3929,150 @@ function resetAutoToggleCounters() {
   }
 }
 
+// 全ドロップダウンメニューの開閉制御 (トップバー、サブヘッダー、各パネルヘッダー)
+function setupDropdownMenus() {
+  const menuItems = document.querySelectorAll('.nav-menu-item');
+
+  function closeAll() {
+    menuItems.forEach(item => {
+      const btn = item.querySelector('.nav-menu-btn');
+      const dropdown = item.querySelector('.nav-menu-dropdown');
+      if (btn) {
+        btn.classList.remove('open');
+        btn.setAttribute('aria-expanded', 'false');
+      }
+      if (dropdown) {
+        dropdown.classList.add('hidden');
+      }
+    });
+  }
+
+  menuItems.forEach(item => {
+    const btn = item.querySelector('.nav-menu-btn');
+    const dropdown = item.querySelector('.nav-menu-dropdown');
+    if (!btn || !dropdown) return;
+
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isOpen = btn.classList.contains('open');
+      closeAll();
+      if (!isOpen) {
+        btn.classList.add('open');
+        btn.setAttribute('aria-expanded', 'true');
+        dropdown.classList.remove('hidden');
+      }
+    });
+
+    // ドロップダウン内のクリック時、select要素やその中身、input/label以外のボタン/リンクをクリックしたらメニューを閉じる
+    dropdown.addEventListener('click', (e) => {
+      if (e.target.tagName === 'SELECT' || e.target.closest('select') ||
+          e.target.tagName === 'LABEL' || e.target.closest('label') ||
+          e.target.tagName === 'INPUT' || e.target.closest('input')) {
+        return; // 設定入力中は閉じない
+      }
+      closeAll();
+    });
+  });
+
+  // 画面外クリックで閉じる
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.nav-menu-item')) {
+      closeAll();
+    }
+  });
+
+  // ESCキーで閉じる
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      closeAll();
+    }
+  });
+
+  // サーバー選択サブヘッダーのオプション同期
+  document.querySelectorAll('.server-opt-item').forEach(optBtn => {
+    optBtn.addEventListener('click', () => {
+      const val = optBtn.getAttribute('data-value');
+      const serverSelect = document.getElementById('serverTargetSelect');
+      if (serverSelect) {
+        serverSelect.value = val;
+        serverSelect.dispatchEvent(new Event('change'));
+      }
+      const label = document.getElementById('currentServerLabel');
+      const span = optBtn.querySelector('[data-i18n]');
+      if (label && span) {
+        label.textContent = span.textContent;
+        label.setAttribute('data-i18n', span.getAttribute('data-i18n'));
+      }
+      document.querySelectorAll('.server-opt-item').forEach(b => b.classList.toggle('active', b === optBtn));
+    });
+  });
+
+  // コンパイラ選択サブヘッダーのオプション同期
+  document.querySelectorAll('.compiler-opt-item').forEach(optBtn => {
+    optBtn.addEventListener('click', () => {
+      const val = optBtn.getAttribute('data-value');
+      setCompilerBackend(val);
+      const selectBackendEl = document.getElementById('selectCompilerBackend');
+      if (selectBackendEl) {
+        selectBackendEl.dispatchEvent(new Event('change'));
+      }
+    });
+  });
+
+  // フォントサイズ変更ボタンハンドラ
+  document.querySelectorAll('.font-size-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const size = btn.getAttribute('data-font');
+      applyFontSize(size);
+    });
+  });
+
+  // メモリ表示形式 (HEX / DEC / FLOAT / TEXT) 選択ハンドラ
+  document.querySelectorAll('.mem-mode-item').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const mode = btn.getAttribute('data-mode');
+      setMemoryMode(mode);
+    });
+  });
+
+  // メモリASCII列 & スパントグルハンドラ
+  document.getElementById('btnAsciiColToggle')?.addEventListener('click', () => {
+    toggleAsciiColumn();
+  });
+  document.getElementById('btnSpanToggle')?.addEventListener('click', () => {
+    toggleMemorySpan();
+  });
+
+  // クイックステップ実行ボタンハンドラ (デバッグ中にワンクリックで1行進む)
+  document.getElementById('btnQuickStep')?.addEventListener('click', () => {
+    nextStepDebug();
+  });
+
+  // 実行メニューのアクション項目ハンドラ接続
+  document.getElementById('menuActionCompile')?.addEventListener('click', () => {
+    compileHike();
+  });
+  document.getElementById('menuActionRun')?.addEventListener('click', () => {
+    runWasm();
+  });
+  document.getElementById('menuActionSave')?.addEventListener('click', () => {
+    saveHikeSourceCode();
+  });
+  document.getElementById('menuActionWasm')?.addEventListener('click', () => {
+    exportWasmBinary();
+  });
+  document.getElementById('menuActionWat')?.addEventListener('click', () => {
+    exportWatText();
+  });
+  document.getElementById('menuActionLlvm')?.addEventListener('click', () => {
+    exportLlvmText();
+  });
+}
+
 // ヘッダーナビゲーションの自動畳み込み (三点リーダー ⋮ メニュー化) 制御
 function setupResponsiveHeaders() {
-  const wrappers = document.querySelectorAll('.panel-actions-wrapper, .controls-wrapper');
+  const wrappers = document.querySelectorAll('.panel-actions-wrapper');
 
   wrappers.forEach(wrapper => {
     const inlineGroup = wrapper.querySelector('.nav-inline-group');
@@ -3058,7 +4142,7 @@ function buildDropdownMenu(inlineGroup, dropdown) {
 }
 
 function checkAllHeaderOverflows() {
-  const wrappers = document.querySelectorAll('.panel-actions-wrapper, .controls-wrapper');
+  const wrappers = document.querySelectorAll('.panel-actions-wrapper');
 
   wrappers.forEach(wrapper => {
     const inlineGroup = wrapper.querySelector('.nav-inline-group');
@@ -3103,12 +4187,12 @@ function checkAllHeaderOverflows() {
           consecutiveToggleCounts[panelId] = count + 1;
           panel.classList.add('collapsed', 'auto-overflow-collapsed');
           const toggleBtn = panel.querySelector('.btn-panel-toggle');
-          if (toggleBtn) toggleBtn.textContent = '➕';
+          if (toggleBtn) toggleBtn.textContent = '+';
         } else if (isAutoCollapsed && headerWidth > 270) {
           consecutiveToggleCounts[panelId] = count + 1;
           panel.classList.remove('collapsed', 'auto-overflow-collapsed');
           const toggleBtn = panel.querySelector('.btn-panel-toggle');
-          if (toggleBtn) toggleBtn.textContent = '➖';
+          if (toggleBtn) toggleBtn.textContent = '−';
         }
       }
     }
@@ -3175,11 +4259,11 @@ function swapPanelContent(sourcePanelId, targetType) {
   setTimeout(checkAllHeaderOverflows, 50);
 
   const typeNames = {
-    'editor': '📄 main.hike (エディタ)',
-    'llvm': '📜 LLVM IR',
-    'wasm': '⚙️ WASM (WAT)',
-    'console': '💻 コンソール',
-    'memory': '🔍 リニアメモリ'
+    'editor': 'エディタ',
+    'llvm': 'LLVM IR',
+    'wasm': 'WASM (WAT)',
+    'console': 'コンソール',
+    'memory': 'リニアメモリ'
   };
   log(currentLang === 'ja' ? `[枠表示切替] ${typeNames[targetType]} の表示位置を変更しました。` : `[Panel Content] Switched ${typeNames[targetType]} position.`, 'info');
 }
@@ -3219,7 +4303,7 @@ function applyLayoutPreset(preset) {
     removeAllCellClasses(p);
     p.classList.remove('collapsed', 'auto-overflow-collapsed');
     const toggleBtn = p.querySelector('.btn-panel-toggle');
-    if (toggleBtn) toggleBtn.textContent = '➖';
+    if (toggleBtn) toggleBtn.textContent = '−';
   });
 
   if (splitterV) {
@@ -3461,6 +4545,7 @@ document.querySelectorAll('.panel-content-select').forEach(select => {
 // 初期起動
 applyLanguage('ja');
 applyTheme(currentTheme);
+applyFontSize(currentFontSize);
 updateEditorGutter();
 syncEditorHighlight();
 updateMemoryGridDisplay();
@@ -3469,6 +4554,8 @@ applyLayoutPreset('4');
 initPanelInteractions();
 initSplitterInteractions();
 setupResponsiveHeaders();
+setupDropdownMenus();
+initMemoryResizeObserver();
 initFileDragAndDrop();
 initMarkerMode();
 

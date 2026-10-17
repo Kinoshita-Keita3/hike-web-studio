@@ -9,80 +9,213 @@
 <body>
 
   <header>
-    <div class="brand">
-      <h1 data-i18n="title">Hike Web Studio</h1>
-      <span class="badge" data-i18n="version">v0.1.0</span>
-    </div>
-
-    <!-- モード選択タブ -->
-    <div class="mode-tabs">
-      <button id="modeStandard" class="tab-btn active" data-i18n="mode_standard">🟢 フリー</button>
-      <button id="modeServer" class="tab-btn" data-i18n="mode_server">🌐 仮想サーバー連携</button>
-      <button id="modeAdvanced" class="tab-btn" data-i18n="mode_advanced">⚙️ アドバンス</button>
-    </div>
-
-    <div class="controls-wrapper">
-      <div class="controls nav-inline-group">
-        <select id="selectLayoutPreset" class="btn-sm" style="background: var(--bg-sub); color: var(--text-main); border: 1px solid var(--border-color); font-weight: 600; cursor: pointer; padding: 2px 4px; font-size: 0.76rem;" title="パネルの分割枠数・配置を選択">
-          <option value="4" data-i18n="opt_layout_4">⊞ 4枠 (2×2)</option>
-          <option value="4tb" data-i18n="opt_layout_4tb">⬒ 4枠 (上2・下縦)</option>
-          <option value="4bt" data-i18n="opt_layout_4bt">⬓ 4枠 (上縦・下2)</option>
-          <option value="3l" data-i18n="opt_layout_3l">◧ 3枠 (左1・右2)</option>
-          <option value="3r" data-i18n="opt_layout_3r">◨ 3枠 (左2・右1)</option>
-          <option value="3t" data-i18n="opt_layout_3t">⬒ 3枠 (上1・下2)</option>
-          <option value="3b" data-i18n="opt_layout_3b">⬓ 3枠 (上2・下1)</option>
-          <option value="2h" data-i18n="opt_layout_2h">◫ 2枠 (左右)</option>
-          <option value="2v" data-i18n="opt_layout_2v">⊟ 2枠 (上下)</option>
-          <option value="1" data-i18n="opt_layout_1">🔲 1枠 (全画面)</option>
-        </select>
-        <button id="btnResetLayout" class="btn-reset-layout" title="分割壁やパネルの移動・折りたたみを標準状態にリセット" data-i18n="btn_reset_layout">🔄 表示復元</button>
-        <a href="manual.html" target="_blank" rel="noopener noreferrer" id="btnManual" class="btn-manual" title="取扱説明書 & 全機能マニュアルを開く" data-i18n="btn_manual">📘 取説・ガイド</a>
-        <a href="https://github.com/kanryu/hike-lang" target="_blank" rel="noopener noreferrer" id="btnHikeLang" class="btn-hike-lang" title="Hike 言語 公式リポジトリを開く" data-i18n="btn_hike_lang">🏔️ Hike言語</a>
-        <a href="https://github.com/Kinoshita-Keita3/hike-web-studio" target="_blank" rel="noopener noreferrer" id="btnGit" class="btn-git" title="GitHub リポジトリ / Git ページを見る" data-i18n="btn_git">📦 Git</a>
-        <button id="btnExercises" class="btn-exercise" data-i18n="btn_exercises">📖 例題</button>
-        <button id="btnCompile" class="btn-primary" data-i18n="btn_build">⚡ ビルド</button>
-        <button id="btnRun" class="btn-success" data-i18n="btn_run">▶ 実行</button>
-        <button id="btnThemeToggle" class="btn-theme" title="ダーク / ライトテーマを切り替え" data-i18n="btn_theme">🌙 ダーク</button>
-        <button id="btnLangToggle" class="btn-lang">🌐 JP / EN</button>
+    <div class="header-left">
+      <div class="brand">
+        <h1 data-i18n="title">Hike Web Studio</h1>
+        <span class="badge" data-i18n="version">v0.1.1</span>
       </div>
-      <button class="btn-more-menu hidden" title="操作メニュー">⋮</button>
-      <div class="nav-dropdown hidden"></div>
+
+      <!-- 分類別 ドロップダウンナビゲーション (クリックで下方向に展開) -->
+      <nav class="top-nav-bar" id="topNavBar">
+        
+        <!-- 1. 実行 ▾ -->
+        <div class="nav-menu-item">
+          <button class="nav-menu-btn" id="navBtnRun" aria-haspopup="true" aria-expanded="false">
+            <span data-i18n="menu_run">実行</span>
+            <span class="dropdown-arrow">▾</span>
+          </button>
+          <div class="nav-menu-dropdown hidden" id="dropdownRun">
+            <div class="menu-section-title">実行</div>
+            <button class="menu-action-item" id="menuActionCompile">
+              <span data-i18n="btn_build">ビルド</span>
+              <kbd>Ctrl+B</kbd>
+            </button>
+            <button class="menu-action-item" id="menuActionRun">
+              <span data-i18n="btn_run">実行</span>
+              <kbd>Ctrl+Enter</kbd>
+            </button>
+            <div class="menu-divider"></div>
+            <div class="menu-section-title">コード保存・出力</div>
+            <button class="menu-action-item" id="menuActionSave">
+              <span data-i18n="menu_save_hike">コード保存 (.hk)</span>
+            </button>
+            <button class="menu-action-item" id="menuActionWasm">
+              <span data-i18n="menu_export_wasm">Wasm保存 (.wasm)</span>
+            </button>
+            <button class="menu-action-item" id="menuActionWat">
+              <span data-i18n="menu_export_wat">WAT保存 (.wat)</span>
+            </button>
+            <button class="menu-action-item" id="menuActionLlvm">
+              <span data-i18n="menu_export_llvm">LLVM保存 (.ll)</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 2. モード ▾ -->
+        <div class="nav-menu-item">
+          <button class="nav-menu-btn" id="navBtnMode" aria-haspopup="true" aria-expanded="false">
+            <span data-i18n="menu_mode">モード</span>
+            <span class="dropdown-arrow">▾</span>
+          </button>
+          <div class="nav-menu-dropdown hidden" id="dropdownMode">
+            <div class="menu-section-title">動作モード</div>
+            <button id="modeStandard" class="menu-action-item tab-btn active">
+              <span class="mode-check">✓ </span><span data-i18n="mode_standard_desc">フリー</span>
+            </button>
+            <button id="modeServer" class="menu-action-item tab-btn">
+              <span class="mode-check">✓ </span><span data-i18n="mode_server_desc">仮想サーバー</span>
+            </button>
+            <button id="modeAdvanced" class="menu-action-item tab-btn">
+              <span class="mode-check">✓ </span><span data-i18n="mode_advanced_desc">アドバンス</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 3. 表示 ▾ -->
+        <div class="nav-menu-item">
+          <button class="nav-menu-btn" id="navBtnView" aria-haspopup="true" aria-expanded="false">
+            <span data-i18n="menu_view">表示</span>
+            <span class="dropdown-arrow">▾</span>
+          </button>
+          <div class="nav-menu-dropdown hidden" id="dropdownView">
+            <div class="menu-section-title">画面レイアウト</div>
+            <div class="menu-select-wrapper">
+              <select id="selectLayoutPreset" class="menu-select" title="パネルの分割配置を選択">
+                <option value="4" data-i18n="opt_layout_4">4分割 (2×2)</option>
+                <option value="3l" data-i18n="opt_layout_3l">3分割 (左1・右2)</option>
+                <option value="3t" data-i18n="opt_layout_3t">3分割 (上1・下2)</option>
+                <option value="2h" data-i18n="opt_layout_2h">2分割 (左右)</option>
+                <option value="2v" data-i18n="opt_layout_2v">2分割 (上下)</option>
+                <option value="1" data-i18n="opt_layout_1">1画面 (全画面)</option>
+              </select>
+            </div>
+            <div class="menu-divider"></div>
+            <button id="btnResetLayout" class="menu-action-item" title="パネルの配置とサイズを初期状態にリセット">
+              <span data-i18n="btn_reset_layout">初期配置に戻す</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 4. 学習 ▾ -->
+        <div class="nav-menu-item">
+          <button class="nav-menu-btn" id="navBtnLearn" aria-haspopup="true" aria-expanded="false">
+            <span data-i18n="menu_learn">学習</span>
+            <span class="dropdown-arrow">▾</span>
+          </button>
+          <div class="nav-menu-dropdown hidden" id="dropdownLearn">
+            <div class="menu-section-title">教材・ガイド</div>
+            <button id="btnExercises" class="menu-action-item" data-i18n="btn_exercises">例題集</button>
+            <div class="menu-divider"></div>
+            <a href="manual.html" target="_blank" rel="noopener noreferrer" id="btnManual" class="menu-action-item" data-i18n="btn_manual">マニュアル</a>
+            <a href="examples.html" target="_blank" rel="noopener noreferrer" id="btnExamplesGuide" class="menu-action-item" data-i18n="btn_examples_guide">教材ガイド</a>
+          </div>
+        </div>
+
+        <!-- 5. 設定 ▾ -->
+        <div class="nav-menu-item">
+          <button class="nav-menu-btn" id="navBtnSettings" aria-haspopup="true" aria-expanded="false">
+            <span data-i18n="menu_settings">設定</span>
+            <span class="dropdown-arrow">▾</span>
+          </button>
+          <div class="nav-menu-dropdown hidden" id="dropdownSettings">
+            <div class="menu-section-title">環境設定</div>
+            <button id="btnThemeToggle" class="menu-action-item" data-i18n="btn_theme">ダーク</button>
+            <button id="btnLangToggle" class="menu-action-item">JP / EN</button>
+            <div class="menu-divider"></div>
+            <div class="menu-section-title" data-i18n="menu_font_size">文字サイズ</div>
+            <div class="menu-segmented-row" id="fontSizeRow">
+              <button class="btn-segmented-item font-size-btn" data-font="sm" data-i18n="font_sm">小</button>
+              <button class="btn-segmented-item font-size-btn active" data-font="md" data-i18n="font_md">標準</button>
+              <button class="btn-segmented-item font-size-btn" data-font="lg" data-i18n="font_lg">大</button>
+            </div>
+            <div class="menu-divider"></div>
+            <div class="menu-section-title">リンク</div>
+            <a href="https://github.com/kanryu/hike-lang" target="_blank" rel="noopener noreferrer" id="btnHikeLang" class="menu-action-item" data-i18n="btn_hike_lang">Hike言語</a>
+            <a href="https://github.com/Kinoshita-Keita3/hike-web-studio" target="_blank" rel="noopener noreferrer" id="btnGit" class="menu-action-item" data-i18n="btn_git">GitHub</a>
+          </div>
+        </div>
+
+      </nav>
+    </div>
+
+    <!-- 右側: クイック実行アクション & 現在モードバッジ -->
+    <div class="header-right">
+      <span id="activeModeIndicator" class="mode-badge" data-i18n="mode_standard">フリー</span>
+      <button id="btnCompile" class="btn-primary" data-i18n="btn_build">ビルド</button>
+      <button id="btnRun" class="btn-success" data-i18n="btn_run">実行</button>
     </div>
   </header>
 
-  <!-- サブパネル: 仮想通信サーバー連携設定 -->
+  <!-- サブパネル: 仮想通信サーバー連携設定 (小項目のドロップダウン化) -->
   <div id="serverPanel" class="sub-header hidden">
-    <div class="adv-group">
-      <span class="adv-title" data-i18n="server_target">🌐 仮想通信相手サーバー:</span>
-      <select id="serverTargetSelect">
-        <option value="auth" data-i18n="srv_auth">🔒 仮想 Auth サーバー (配置Wasm: remote_auth.wasm)</option>
-        <option value="upload" data-i18n="srv_upload">📦 仮想 Storage サーバー (配置Wasm: remote_stream.wasm)</option>
-        <option value="qr_engine" data-i18n="srv_qr">📷 仮想 Code Scanner ノード (配置Wasm: remote_scanner.wasm)</option>
+    <div class="nav-menu-item">
+      <button class="nav-menu-btn panel-menu-btn" id="btnServerDropdown">
+        <span data-i18n="server_target">サーバー</span>: <span id="currentServerLabel" data-i18n="srv_auth">Auth サーバー</span> <span class="dropdown-arrow">▾</span>
+      </button>
+      <div class="nav-menu-dropdown hidden" id="dropdownServerList">
+        <button class="menu-action-item server-opt-item active" data-value="auth">
+          <span class="mode-check">✓ </span><span data-i18n="srv_auth">Auth サーバー</span>
+        </button>
+        <button class="menu-action-item server-opt-item" data-value="upload">
+          <span class="mode-check">✓ </span><span data-i18n="srv_upload">Storage サーバー</span>
+        </button>
+        <button class="menu-action-item server-opt-item" data-value="qr_engine">
+          <span class="mode-check">✓ </span><span data-i18n="srv_qr">Scanner ノード</span>
+        </button>
+      </div>
+      <select id="serverTargetSelect" style="display: none;">
+        <option value="auth" selected data-i18n="srv_auth">Auth サーバー</option>
+        <option value="upload" data-i18n="srv_upload">Storage サーバー</option>
+        <option value="qr_engine" data-i18n="srv_qr">Scanner ノード</option>
       </select>
     </div>
   </div>
 
-  <!-- サブパネル: アドバンスド設定 -->
+  <!-- サブパネル: アドバンスド設定 (小項目のドロップダウン化) -->
   <div id="advancedPanel" class="sub-header hidden">
-    <div class="adv-group">
-      <span class="adv-title" data-i18n="adv_link_modules">🔗 リンクモジュール:</span>
-      <label><input type="checkbox" class="mod-check" value="io" checked> I/O</label>
-      <label><input type="checkbox" class="mod-check" value="webapi" checked> Web API</label>
-      <label><input type="checkbox" class="mod-check" value="stream"> Binary Stream</label>
-      <label><input type="checkbox" class="mod-check" value="crypto"> Crypto</label>
+    <!-- モジュール ▾ -->
+    <div class="nav-menu-item">
+      <button class="nav-menu-btn panel-menu-btn" id="btnAdvModulesDropdown">
+        <span data-i18n="adv_link_modules">モジュール</span> <span class="dropdown-arrow">▾</span>
+      </button>
+      <div class="nav-menu-dropdown hidden" id="dropdownAdvModules" style="padding: 8px 12px; gap: 8px; min-width: 150px;">
+        <label><input type="checkbox" class="mod-check" value="io" checked> I/O</label>
+        <label><input type="checkbox" class="mod-check" value="webapi" checked> Web API</label>
+        <label><input type="checkbox" class="mod-check" value="stream"> Stream</label>
+        <label><input type="checkbox" class="mod-check" value="crypto"> Crypto</label>
+      </div>
     </div>
-    <div class="adv-group">
-      <span class="adv-title" data-i18n="adv_compiler_pipeline">🏗️ コンパイラ・パイプライン:</span>
-      <select id="selectCompilerBackend" class="btn-sm" style="background: var(--bg-sub); color: var(--text-main); border: 1px solid var(--border-color); font-weight: 600; cursor: pointer; padding: 2px 6px; font-size: 0.76rem;" title="Hike コンパイラのバックエンド パイプラインを選択">
-        <option value="wabt" selected data-i18n="opt_backend_wabt">🏔️ WAT/WABT 直結 (構造化HIR・1対1高精度デバッグ推奨)</option>
-        <option value="llvm" data-i18n="opt_backend_llvm">⚡ LLVM IR パイプライン (-O3 最適化)</option>
+
+    <!-- コンパイラ ▾ -->
+    <div class="nav-menu-item">
+      <button class="nav-menu-btn panel-menu-btn" id="btnAdvCompilerDropdown">
+        <span data-i18n="adv_compiler_pipeline">コンパイラ</span>: <span id="currentCompilerLabel" data-i18n="opt_backend_wabt">標準 (WAT)</span> <span class="dropdown-arrow">▾</span>
+      </button>
+      <div class="nav-menu-dropdown hidden" id="dropdownAdvCompiler">
+        <button class="menu-action-item compiler-opt-item active" data-value="wabt">
+          <span class="mode-check">✓ </span><span data-i18n="opt_backend_wabt">標準 (WAT)</span>
+        </button>
+        <button class="menu-action-item compiler-opt-item" data-value="llvm">
+          <span class="mode-check">✓ </span><span data-i18n="opt_backend_llvm">最適化 (LLVM -O3)</span>
+        </button>
+      </div>
+      <select id="selectCompilerBackend" style="display: none;">
+        <option value="wabt" selected data-i18n="opt_backend_wabt">標準 (WAT)</option>
+        <option value="llvm" data-i18n="opt_backend_llvm">最適化 (LLVM -O3)</option>
       </select>
     </div>
-    <div class="adv-group">
-      <span class="adv-title" data-i18n="adv_compiler_flags">⚙️ フラグ & 安全制御:</span>
-      <label><input type="checkbox" id="chkDebugFlag" checked> <code>-g</code></label>
-      <label><input type="checkbox" id="chkOptFlag" checked> <code>-O3</code></label>
-      <label class="danger-label"><input type="checkbox" id="chkExternalFetch"> 🌐 外部通信許可</label>
+
+    <!-- フラグ ▾ -->
+    <div class="nav-menu-item">
+      <button class="nav-menu-btn panel-menu-btn" id="btnAdvFlagsDropdown">
+        <span data-i18n="adv_compiler_flags">フラグ</span> <span class="dropdown-arrow">▾</span>
+      </button>
+      <div class="nav-menu-dropdown hidden" id="dropdownAdvFlags" style="padding: 8px 12px; gap: 8px; min-width: 170px;">
+        <label><input type="checkbox" id="chkDebugFlag" checked> <code>-g</code> (デバッグ)</label>
+        <label><input type="checkbox" id="chkOptFlag" checked> <code>-O3</code> (最適化)</label>
+        <div class="menu-divider"></div>
+        <label class="danger-label"><input type="checkbox" id="chkExternalFetch"> 外部通信許可</label>
+      </div>
     </div>
   </div>
 
@@ -92,30 +225,70 @@
       <div class="panel-header">
         <div class="panel-title-wrapper">
           <span class="drag-handle" title="ドラッグして他の枠と位置を入れ替え">⋮⋮</span>
-          <select class="panel-content-select" data-panel-id="panel-editor" title="この枠に表示するコンテンツを選択">
-            <option value="editor" selected data-i18n="title_editor">📄 main.hike (エディタ)</option>
-            <option value="llvm" data-i18n="title_llvm">📜 LLVM IR</option>
-            <option value="wasm" data-i18n="title_wasm">⚙️ WASM (WAT)</option>
-            <option value="console" data-i18n="title_console">💻 コンソール & トレース</option>
-            <option value="memory" data-i18n="title_memory">🔍 リニアメモリ (Zero-GC)</option>
+          <select class="panel-content-select" data-panel-id="panel-editor" title="枠の表示内容を選択">
+            <option value="editor" selected data-i18n="title_editor">エディタ</option>
+            <option value="llvm" data-i18n="title_llvm">LLVM IR</option>
+            <option value="wasm" data-i18n="title_wasm">WASM</option>
+            <option value="console" data-i18n="title_console">コンソール</option>
+            <option value="memory" data-i18n="title_memory">メモリ</option>
           </select>
         </div>
         
         <div class="panel-actions-wrapper">
-          <div class="debug-toolbar nav-inline-group">
-            <button id="btnSaveHike" class="btn-dbg" title="Hike ソースコード (.hike) を保存/ダウンロード" data-i18n="btn_save_hike">💾 保存</button>
-            <button id="btnCompileEditor" class="btn-dbg" style="border-color: var(--accent-blue); color: var(--accent-blue); font-weight: 600;" title="Hike コードをコンパイル (LLVM IR & WASM を更新)" data-i18n="btn_build">⚡ ビルド</button>
-            <button id="btnMarkerToggle" class="btn-dbg active-marker-btn on" style="border-color: #3b82f6; color: #3b82f6; font-weight: 600;" title="非実行時にコード選択で対応するLLVM/WASM箇所を薄青マーカー表示">🖊️ マーカー</button>
-            <button id="btnDebugStart" class="btn-dbg" title="デバッグ実行を開始" data-i18n="dbg_start">▶️ 開始</button>
-            <button id="btnDebugNext" class="btn-dbg" disabled title="1行進む (F10)" data-i18n="dbg_next">⏭️ 次</button>
-            <button id="btnDebugAutoStep" class="btn-dbg" title="2秒ごとに自動で1行ステップ実行 (再度クリックで一時停止)">⏯️ 自動</button>
-            <button id="btnDebugContinue" class="btn-dbg btn-dbg-continue" disabled title="次のブレークポイントまでスキップ (F5)" data-i18n="dbg_continue">⏩ スキップ</button>
-            <button id="btnDebugReset" class="btn-dbg" disabled title="デバッグ実行をリセット" data-i18n="dbg_reset">🔄 リセット</button>
-            <span id="backendBadge" class="status-tag" style="background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid #10b981;" title="WAT/WABT 直結パイプライン稼働中: ソース行とWasm命令が1対1完全同期">WAT/WABT 1:1</span>
+          <div class="debug-toolbar panel-nav-group nav-inline-group">
+            <!-- コード ▾ -->
+            <div class="nav-menu-item">
+              <button class="nav-menu-btn panel-menu-btn" id="btnEditorCodeDropdown" aria-haspopup="true" aria-expanded="false">
+                <span data-i18n="panel_menu_code">コード</span> <span class="dropdown-arrow">▾</span>
+              </button>
+              <div class="nav-menu-dropdown hidden" id="dropdownEditorCode">
+                <button id="btnCompileEditor" class="menu-action-item" title="コードをビルド (Ctrl+B)">
+                  <span data-i18n="btn_build">ビルド</span> <kbd>Ctrl+B</kbd>
+                </button>
+                <button id="btnSaveHike" class="menu-action-item" title="コードを保存 (Ctrl+S)">
+                  <span data-i18n="btn_save_hike">保存</span> <kbd>Ctrl+S</kbd>
+                </button>
+                <div class="menu-divider"></div>
+                <button id="btnMarkerToggle" class="menu-action-item active-marker-btn on" title="コード連動マーカー表示切替">
+                  <span data-i18n="btn_marker">連動マーカー</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- デバッグ ▾ -->
+            <div class="nav-menu-item">
+              <button class="nav-menu-btn panel-menu-btn" id="btnEditorDebugDropdown" aria-haspopup="true" aria-expanded="false">
+                <span data-i18n="panel_menu_debug">デバッグ</span> <span class="dropdown-arrow">▾</span>
+              </button>
+              <div class="nav-menu-dropdown hidden" id="dropdownEditorDebug">
+                <button id="btnDebugStart" class="menu-action-item" title="デバッグ開始">
+                  <span data-i18n="dbg_start">開始</span>
+                </button>
+                <button id="btnDebugNext" class="menu-action-item" disabled title="1行進む">
+                  <span data-i18n="dbg_next">次</span> <kbd>F10</kbd>
+                </button>
+                <button id="btnDebugAutoStep" class="menu-action-item" title="自動ステップ実行">
+                  <span data-i18n="dbg_auto">自動</span>
+                </button>
+                <button id="btnDebugContinue" class="menu-action-item btn-dbg-continue" disabled title="次へ進む (F5)">
+                  <span data-i18n="dbg_continue">スキップ</span> <kbd>F5</kbd>
+                </button>
+                <div class="menu-divider"></div>
+                <button id="btnDebugReset" class="menu-action-item" disabled title="デバッグをリセット">
+                  <span data-i18n="dbg_reset">リセット</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- クイックステップ実行ボタン (デバッグ中に表示) -->
+            <button id="btnQuickStep" class="btn-dbg hidden" title="1行進む" style="font-weight: 600; color: var(--accent-blue); border-color: var(--accent-blue);" data-i18n="dbg_step_quick">次へ</button>
+
+            <span id="backendBadge" class="status-tag" style="background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid #10b981;" title="WAT">WAT</span>
             <span id="debugStepBadge" class="status-tag">Stopped</span>
           </div>
           <button class="btn-more-menu hidden" title="操作メニュー">⋮</button>
-          <button class="btn-sm btn-panel-toggle" title="パネルを折りたたむ / 展開 (ダブルクリック可)">➖</button>
+          <button class="btn-sm btn-panel-popout" data-panel-id="panel-editor" title="別ウィンドウで開く (切り離し)" data-i18n-title="btn_popout">⤢</button>
+          <button class="btn-sm btn-panel-toggle" title="パネルを折りたたむ / 展開 (ダブルクリック可)">−</button>
           <div class="nav-dropdown hidden"></div>
         </div>
       </div>
@@ -123,13 +296,13 @@
         <!-- ファイルドロップオーバーレイ -->
         <div id="editorDropZone" class="editor-drop-zone hidden">
           <div class="drop-zone-content">
-            <div class="drop-zone-icon">📥</div>
-            <div class="drop-zone-text" data-i18n="drop_zone_text">.hike ファイルをドロップして読み込み</div>
+            <div class="drop-zone-icon">↓</div>
+            <div class="drop-zone-text" data-i18n="drop_zone_text">ファイルをドロップ</div>
           </div>
         </div>
         <div id="lineHighlight" class="active-line-indicator hidden"></div>
         <div class="code-editor-layout">
-          <div id="editorGutter" class="editor-gutter" title="クリックで行番号に🔴ブレークポイントを追加/解除"></div>
+          <div id="editorGutter" class="editor-gutter" title="クリックで行番号にブレークポイントを追加/解除"></div>
           <div class="editor-container">
             <pre id="editorHighlight" class="editor-highlight-layer" aria-hidden="true"><code></code></pre>
 <textarea id="hikeCode" class="code-editor" spellcheck="false">
@@ -156,28 +329,36 @@ func main() int32 {
     </div>
 
     <!-- 垂直分割壁 (左右の壁を移動) -->
-    <div class="splitter splitter-v" id="splitterV" title="壁を左右にドラッグして幅を移動 (小さくなると自動でたたむ)"></div>
+    <div class="splitter splitter-v" id="splitterV" title="ドラッグして境界を移動"></div>
 
     <!-- パネル 2: LLVM IR 出力 (非表示スロット) -->
     <div class="panel cell-top-right" id="panel-llvm" style="display: none;" draggable="true">
       <div class="panel-header">
         <div class="panel-title-wrapper">
           <span class="drag-handle" title="ドラッグして他の枠と位置を入れ替え">⋮⋮</span>
-          <select class="panel-content-select" data-panel-id="panel-llvm" title="この枠に表示するコンテンツを選択">
-            <option value="editor" data-i18n="title_editor">📄 main.hike (エディタ)</option>
-            <option value="llvm" selected data-i18n="title_llvm">📜 LLVM IR</option>
-            <option value="wasm" data-i18n="title_wasm">⚙️ WASM (WAT)</option>
-            <option value="console" data-i18n="title_console">💻 コンソール & トレース</option>
-            <option value="memory" data-i18n="title_memory">🔍 リニアメモリ (Zero-GC)</option>
+          <select class="panel-content-select" data-panel-id="panel-llvm" title="枠の表示内容を選択">
+            <option value="editor" data-i18n="title_editor">エディタ</option>
+            <option value="llvm" selected data-i18n="title_llvm">LLVM IR</option>
+            <option value="wasm" data-i18n="title_wasm">WASM</option>
+            <option value="console" data-i18n="title_console">コンソール</option>
+            <option value="memory" data-i18n="title_memory">メモリ</option>
           </select>
         </div>
         <div class="panel-actions-wrapper">
           <span id="buildStatus" class="log-info" data-i18n="status_ready">準備完了</span>
-          <div class="panel-actions nav-inline-group">
-            <button id="btnExportLlvm" class="btn-sm" style="border-color: var(--accent-yellow); color: var(--accent-yellow);" title="LLVM IR テキスト (.ll) をダウンロード" data-i18n="btn_export_llvm">📜 LLVM出力</button>
+          <div class="panel-actions panel-nav-group nav-inline-group">
+            <div class="nav-menu-item">
+              <button class="nav-menu-btn panel-menu-btn" id="btnLlvmExportDropdown" aria-haspopup="true" aria-expanded="false">
+                <span data-i18n="menu_export">出力</span> <span class="dropdown-arrow">▾</span>
+              </button>
+              <div class="nav-menu-dropdown hidden" id="dropdownLlvmExport">
+                <button id="btnExportLlvm" class="menu-action-item" title="LLVM IR (.ll) をダウンロード" data-i18n="btn_export_llvm">LLVM出力</button>
+              </div>
+            </div>
           </div>
           <button class="btn-more-menu hidden" title="操作メニュー">⋮</button>
-          <button class="btn-sm btn-panel-toggle" title="パネルを折りたたむ / 展開 (ダブルクリック可)">➖</button>
+          <button class="btn-sm btn-panel-popout" data-panel-id="panel-llvm" title="別ウィンドウで開く (切り離し)" data-i18n-title="btn_popout">⤢</button>
+          <button class="btn-sm btn-panel-toggle" title="パネルを折りたたむ / 展開 (ダブルクリック可)">−</button>
           <div class="nav-dropdown hidden"></div>
         </div>
       </div>
@@ -191,21 +372,29 @@ func main() int32 {
       <div class="panel-header">
         <div class="panel-title-wrapper">
           <span class="drag-handle" title="ドラッグして他の枠と位置を入れ替え">⋮⋮</span>
-          <select class="panel-content-select" data-panel-id="panel-wasm" title="この枠に表示するコンテンツを選択">
-            <option value="editor" data-i18n="title_editor">📄 main.hike (エディタ)</option>
-            <option value="llvm" data-i18n="title_llvm">📜 LLVM IR</option>
-            <option value="wasm" selected data-i18n="title_wasm">⚙️ WASM (WAT)</option>
-            <option value="console" data-i18n="title_console">💻 コンソール & トレース</option>
-            <option value="memory" data-i18n="title_memory">🔍 リニアメモリ (Zero-GC)</option>
+          <select class="panel-content-select" data-panel-id="panel-wasm" title="枠の表示内容を選択">
+            <option value="editor" data-i18n="title_editor">エディタ</option>
+            <option value="llvm" data-i18n="title_llvm">LLVM IR</option>
+            <option value="wasm" selected data-i18n="title_wasm">WASM</option>
+            <option value="console" data-i18n="title_console">コンソール</option>
+            <option value="memory" data-i18n="title_memory">メモリ</option>
           </select>
         </div>
         <div class="panel-actions-wrapper">
-          <div class="panel-actions nav-inline-group">
-            <button id="btnExportWasm" class="btn-sm" style="border-color: var(--accent-green); color: var(--accent-green);" title="コンパイル済み WASM バイナリ (.wasm) をダウンロード" data-i18n="btn_export_wasm">💾 WASM出力</button>
-            <button id="btnExportWat" class="btn-sm" style="border-color: var(--accent-yellow); color: var(--accent-yellow);" title="WASM テキスト (.wat) をダウンロード" data-i18n="btn_export_wat">📜 WAT出力</button>
+          <div class="panel-actions panel-nav-group nav-inline-group">
+            <div class="nav-menu-item">
+              <button class="nav-menu-btn panel-menu-btn" id="btnWasmExportDropdown" aria-haspopup="true" aria-expanded="false">
+                <span data-i18n="menu_export">出力</span> <span class="dropdown-arrow">▾</span>
+              </button>
+              <div class="nav-menu-dropdown hidden" id="dropdownWasmExport">
+                <button id="btnExportWasm" class="menu-action-item" title="WASM バイナリ (.wasm) をダウンロード" data-i18n="btn_export_wasm">WASM出力</button>
+                <button id="btnExportWat" class="menu-action-item" title="WASM テキスト (.wat) をダウンロード" data-i18n="btn_export_wat">WAT出力</button>
+              </div>
+            </div>
           </div>
           <button class="btn-more-menu hidden" title="操作メニュー">⋮</button>
-          <button class="btn-sm btn-panel-toggle" title="パネルを折りたたむ / 展開 (ダブルクリック可)">➖</button>
+          <button class="btn-sm btn-panel-popout" data-panel-id="panel-wasm" title="別ウィンドウで開く (切り離し)" data-i18n-title="btn_popout">⤢</button>
+          <button class="btn-sm btn-panel-toggle" title="パネルを折りたたむ / 展開 (ダブルクリック可)">−</button>
           <div class="nav-dropdown hidden"></div>
         </div>
       </div>
@@ -215,23 +404,23 @@ func main() int32 {
     </div>
 
     <!-- 水平分割壁 (上下の壁を移動) -->
-    <div class="splitter splitter-h" id="splitterH" title="壁を上下にドラッグして高さを移動 (小さくなると自動でたたむ)"></div>
-    <div class="splitter splitter-h" id="splitterH2" style="display: none;" title="段枠の境界を上下にドラッグして高さを調整"></div>
+    <div class="splitter splitter-h" id="splitterH" title="ドラッグして境界を移動"></div>
+    <div class="splitter splitter-h" id="splitterH2" style="display: none;" title="ドラッグして境界を移動"></div>
 
     <!-- 十字交差ハンドル (全方向同時移動) -->
-    <div class="splitter-intersection" id="splitterIntersection" title="中央交差点をドラッグして上下左右を同時に自由移動"></div>
+    <div class="splitter-intersection" id="splitterIntersection" title="ドラッグして境界を移動"></div>
 
     <!-- パネル 4: コンソール出力 (Bottom-Left Cell) -->
     <div class="panel cell-bottom-left" id="panel-console" draggable="true">
       <div class="panel-header">
         <div class="panel-title-wrapper">
           <span class="drag-handle" title="ドラッグして他の枠と位置を入れ替え">⋮⋮</span>
-          <select class="panel-content-select" data-panel-id="panel-console" title="この枠に表示するコンテンツを選択">
-            <option value="editor" data-i18n="title_editor">📄 main.hike (エディタ)</option>
-            <option value="llvm" data-i18n="title_llvm">📜 LLVM IR</option>
-            <option value="wasm" data-i18n="title_wasm">⚙️ WASM (WAT)</option>
-            <option value="console" selected data-i18n="title_console">💻 コンソール & トレース</option>
-            <option value="memory" data-i18n="title_memory">🔍 リニアメモリ (Zero-GC)</option>
+          <select class="panel-content-select" data-panel-id="panel-console" title="枠の表示内容を選択">
+            <option value="editor" data-i18n="title_editor">エディタ</option>
+            <option value="llvm" data-i18n="title_llvm">LLVM IR</option>
+            <option value="wasm" data-i18n="title_wasm">WASM</option>
+            <option value="console" selected data-i18n="title_console">コンソール</option>
+            <option value="memory" data-i18n="title_memory">メモリ</option>
           </select>
         </div>
         <div class="panel-actions-wrapper">
@@ -239,18 +428,18 @@ func main() int32 {
             <button id="btnClearConsole" class="btn-sm" data-i18n="btn_clear">消去</button>
           </div>
           <button class="btn-more-menu hidden" title="操作メニュー">⋮</button>
-          <button class="btn-sm btn-panel-toggle" title="パネルを折りたたむ / 展開 (ダブルクリック可)">➖</button>
+          <button class="btn-sm btn-panel-popout" data-panel-id="panel-console" title="別ウィンドウで開く (切り離し)" data-i18n-title="btn_popout">⤢</button>
+          <button class="btn-sm btn-panel-toggle" title="パネルを折りたたむ / 展開 (ダブルクリック可)">−</button>
           <div class="nav-dropdown hidden"></div>
         </div>
       </div>
       <div class="panel-body" style="display: flex; flex-direction: column; height: 100%;">
         <div id="consoleLog" class="console-output" style="flex: 1;">
-          <div class="log-line log-info" data-i18n="log_init">[システム] Hike Web Studio が起動しました。</div>
-          <div class="log-line log-success" data-i18n="log_mem_var_guide">[メモリ表示] 右上の「📊 1行/2行/3行表示」ボタンでデータ量に合わせてメモリ表示行数を自由に増やせます！</div>
+          <div class="log-line log-info" data-i18n="log_init">[システム] 準備完了</div>
         </div>
         <div id="consoleInputWrapper" class="console-input-wrapper hidden">
           <span class="console-prompt">&gt;</span>
-          <input type="text" id="consoleInput" class="console-input" placeholder="fmt.Scanf 入力 (数値や文字を入力して Enter / 送信)...">
+          <input type="text" id="consoleInput" class="console-input" placeholder="入力して Enter...">
           <button id="btnConsoleInputSubmit" class="btn-sm btn-success">送信</button>
         </div>
       </div>
@@ -261,50 +450,80 @@ func main() int32 {
       <div class="panel-header">
         <div class="panel-title-wrapper">
           <span class="drag-handle" title="ドラッグして他の枠と位置を入れ替え">⋮⋮</span>
-          <select class="panel-content-select" data-panel-id="panel-memory" title="この枠に表示するコンテンツを選択">
-            <option value="editor" data-i18n="title_editor">📄 main.hike (エディタ)</option>
-            <option value="llvm" data-i18n="title_llvm">📜 LLVM IR</option>
-            <option value="wasm" data-i18n="title_wasm">⚙️ WASM (WAT)</option>
-            <option value="console" data-i18n="title_console">💻 コンソール & トレース</option>
-            <option value="memory" selected data-i18n="title_memory">🔍 リニアメモリ (Zero-GC)</option>
+          <select class="panel-content-select" data-panel-id="panel-memory" title="枠の表示内容を選択">
+            <option value="editor" data-i18n="title_editor">エディタ</option>
+            <option value="llvm" data-i18n="title_llvm">LLVM IR</option>
+            <option value="wasm" data-i18n="title_wasm">WASM</option>
+            <option value="console" data-i18n="title_console">コンソール</option>
+            <option value="memory" selected data-i18n="title_memory">メモリ</option>
           </select>
         </div>
         <div class="panel-actions-wrapper">
-          <div class="mem-controls nav-inline-group">
-            <button id="btnRowsToggle" class="btn-sm btn-mode-toggle" title="表示行数を1行/2行/3行で切り替え">📊 3行表示</button>
-            <button id="btnHexDecToggle" class="btn-sm btn-mode-toggle">🔢 16進数 (HEX)</button>
+          <div class="mem-controls panel-nav-group nav-inline-group">
+            <div class="nav-menu-item">
+              <button class="nav-menu-btn panel-menu-btn" id="btnMemSettingsDropdown" aria-haspopup="true" aria-expanded="false">
+                <span data-i18n="panel_menu_display">表示設定</span> <span class="dropdown-arrow">▾</span>
+              </button>
+              <div class="nav-menu-dropdown hidden" id="dropdownMemSettings" style="min-width: 175px;">
+                <div class="menu-section-title" data-i18n="mem_format_title">表示形式</div>
+                <button class="menu-action-item mem-mode-item active" data-mode="auto" title="各ブロックの変数の型に合わせて個別自動表示">
+                  <span class="mode-check">✓ </span><span data-i18n="mem_mode_auto">自動 (ブロック型連動)</span>
+                </button>
+                <button class="menu-action-item mem-mode-item" data-mode="hex">
+                  <span class="mode-check">✓ </span><span data-i18n="mem_mode_hex">16進数 (HEX)</span>
+                </button>
+                <button class="menu-action-item mem-mode-item" data-mode="dec">
+                  <span class="mode-check">✓ </span><span data-i18n="mem_mode_dec">10進整数 (INT)</span>
+                </button>
+                <button class="menu-action-item mem-mode-item" data-mode="float">
+                  <span class="mode-check">✓ </span><span data-i18n="mem_mode_float">浮動小数点 (FLOAT)</span>
+                </button>
+                <button class="menu-action-item mem-mode-item" data-mode="text">
+                  <span class="mode-check">✓ </span><span data-i18n="mem_mode_text">文字 (TEXT)</span>
+                </button>
+                <div class="menu-divider"></div>
+                <div class="menu-section-title" data-i18n="mem_layout_title">レイアウト</div>
+                <button id="btnRowsToggle" class="menu-action-item" title="表示行数を切り替え">
+                  <span id="labelRowsToggle" data-i18n="mem_rows_auto">行数: 自動 (連動)</span>
+                </button>
+                <button id="btnSpanToggle" class="menu-action-item" title="ブロックの結合スパン設定を切り替え">
+                  <span id="labelSpanToggle" data-i18n="mem_span_auto">ブロック幅: 自動スパン (型連動)</span>
+                </button>
+                <button id="btnAsciiColToggle" class="menu-action-item" title="ASCII文字列プレビュー列の表示/非表示">
+                  <span id="labelAsciiColToggle" data-i18n="mem_ascii_on">ASCII列: 表示</span>
+                </button>
+                <button id="btnHexDecToggle" style="display: none;"></button>
+              </div>
+            </div>
           </div>
           <button class="btn-more-menu hidden" title="操作メニュー">⋮</button>
-          <button class="btn-sm btn-panel-toggle" title="パネルを折りたたむ / 展開 (ダブルクリック可)">➖</button>
+          <button class="btn-sm btn-panel-popout" data-panel-id="panel-memory" title="別ウィンドウで開く (切り離し)" data-i18n-title="btn_popout">⤢</button>
+          <button class="btn-sm btn-panel-toggle" title="パネルを折りたたむ / 展開 (ダブルクリック可)">−</button>
           <div class="nav-dropdown hidden"></div>
         </div>
       </div>
       <div class="panel-body">
         <div style="padding: 6px 10px; font-weight: 600; font-size: 0.78rem; color: var(--accent-blue);" data-i18n="scope_vars">
-          📌 現在のスコープ変数 (Local Scope):
+          ローカル変数
         </div>
         <div class="watch-list" id="watchList">
-          <div class="watch-item"><span class="watch-name">実行中の行 (Line)</span><span class="watch-val" id="val-line">-</span></div>
-          <div class="watch-item"><span class="watch-name">設置済BPリスト (Breakpoints)</span><span class="watch-val" id="val-bp-list" style="color: var(--accent-red);">[Line 8, Line 10]</span></div>
-          <div class="watch-item"><span class="watch-name">i (ループ変数 @ 0x0000)</span><span class="watch-val" id="val-i">0</span></div>
-          <div class="watch-item"><span class="watch-name">total (合計値 @ 0x0004)</span><span class="watch-val" id="val-total">0</span></div>
+          <div class="watch-item"><span class="watch-name">実行行</span><span class="watch-val" id="val-line">-</span></div>
+          <div class="watch-item"><span class="watch-name">ブレークポイント</span><span class="watch-val" id="val-bp-list" style="color: var(--accent-red);">(なし)</span></div>
+          <div class="watch-item"><span class="watch-name">i (0x0000)</span><span class="watch-val" id="val-i">0</span></div>
+          <div class="watch-item"><span class="watch-name">total (0x0004)</span><span class="watch-val" id="val-total">0</span></div>
         </div>
 
         <div class="mem-title-bar">
-          <span class="mem-title" data-i18n="mem_dump_title">メモリダンプ (多行ビュー表示中):</span>
-          <span id="hexDecBadge" class="badge-sm">HEX Mode (3 Rows)</span>
+          <span class="mem-title" data-i18n="mem_dump_title">メモリダンプ</span>
+          <span id="hexDecBadge" class="badge-sm">HEX (自動)</span>
         </div>
-        <div class="memory-grid-wrapper">
-          <table class="memory-grid">
-            <thead>
-              <tr>
-                <th>Offset</th>
-                <th>+00</th><th>+04</th><th>+08</th><th>+0C</th>
-                <th>+10</th><th>+14</th><th>+18</th><th>+1C</th>
-              </tr>
+        <div class="memory-grid-wrapper" id="memoryGridWrapper">
+          <table class="memory-grid" id="memoryGridTable">
+            <thead id="memoryHeader">
+              <!-- 動的ヘッダーレンダリング -->
             </thead>
             <tbody id="memoryBody">
-              <!-- 動的1行〜3行レンダリング -->
+              <!-- 動的レンダリング -->
             </tbody>
           </table>
         </div>
@@ -316,12 +535,12 @@ func main() int32 {
   <div id="manualModal" class="modal-backdrop hidden">
     <div class="modal-content large-modal">
       <div class="modal-header">
-        <h2 data-i18n="manual_modal_title">📘 Hike Web Studio 取扱説明書 & WASM 安全性ガイドライン</h2>
+        <h2 data-i18n="manual_modal_title">取扱説明書</h2>
         <button id="btnCloseManualModal" class="btn-close">&times;</button>
       </div>
       <div class="modal-body">
         <div class="manual-section alert-box success-alert">
-          <h3>🛡️ WebAssembly (WASM) の安全性とセキュリティ範囲</h3>
+          <h3>WebAssembly (WASM) の安全性</h3>
           <p>WebAssembly はブラウザの高度なサンドボックス内で実行されるため、安全にデバッグできます。</p>
         </div>
       </div>
@@ -332,7 +551,7 @@ func main() int32 {
   <div id="exerciseModal" class="modal-backdrop hidden">
     <div class="modal-content" style="max-width: 680px;">
       <div class="modal-header">
-        <h2 data-i18n="ex_modal_title">📖 Hike プログラミング例題・演習集 (全 9 演習)</h2>
+        <h2 data-i18n="ex_modal_title">例題集</h2>
         <button id="btnCloseModal" class="btn-close">&times;</button>
       </div>
       <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
@@ -342,39 +561,39 @@ func main() int32 {
             <h3>演習 1: 1 から N までの総和計算 <span class="badge-sm" style="background: rgba(166,227,161,0.2); color: #a6e3a1;">初級</span></h3>
             <p>ループ変数 `i` と累積和 `total` の基本動作を追跡します。</p>
           </div>
-          <button class="btn-primary btn-load-ex" data-ex="sum">演習1を読み込む</button>
+          <button class="btn-primary btn-load-ex" data-ex="sum">読み込む</button>
         </div>
 
         <div class="exercise-card">
           <div class="ex-info">
             <h3>演習 2: 文字列リテラルとポインタ操作 <span class="badge-sm" style="background: rgba(137,220,235,0.2); color: #89dceb;">初中級</span></h3>
-            <p>メモリ上の UTF-8/ASCII 文字コード配列とポインタ `*byte` 参照を学びます。</p>
+            <p>メモリ上の文字列配列とポインタ `*byte` 参照を確認します。</p>
           </div>
-          <button class="btn-primary btn-load-ex" data-ex="string_ptr">演習2を読み込む</button>
+          <button class="btn-primary btn-load-ex" data-ex="string_ptr">読み込む</button>
         </div>
 
         <div class="exercise-card">
           <div class="ex-info">
             <h3>演習 3: 配列要素の最大値探索 <span class="badge-sm" style="background: rgba(137,220,235,0.2); color: #89dceb;">中級</span></h3>
-            <p>固定長配列の連続領域と `if` 条件分岐による最大値更新ロジックを確認します。</p>
+            <p>固定長配列の連続領域と `if` 条件分岐による最大値更新を確認します。</p>
           </div>
-          <button class="btn-primary btn-load-ex" data-ex="max">演習3を読み込む</button>
+          <button class="btn-primary btn-load-ex" data-ex="max">読み込む</button>
         </div>
 
         <div class="exercise-card">
           <div class="ex-info">
             <h3>演習 4: ユークリッドの互除法 (最大公約数) <span class="badge-sm" style="background: rgba(137,180,250,0.2); color: #89b4fa;">中級</span></h3>
-            <p>余り計算 `%` と変数スワップによる古代アルゴリズムの収束プロセスを追跡します。</p>
+            <p>余り計算 `%` と変数スワップによるアルゴリズムの収束プロセスを追跡します。</p>
           </div>
-          <button class="btn-primary btn-load-ex" data-ex="gcd">演習4を読み込む</button>
+          <button class="btn-primary btn-load-ex" data-ex="gcd">読み込む</button>
         </div>
 
         <div class="exercise-card">
           <div class="ex-info">
             <h3>演習 5: 簡易的なバブルソート <span class="badge-sm" style="background: rgba(250,179,135,0.2); color: #fab387;">中上級</span></h3>
-            <p>隣接要素の比較と一時変数 `temp` による配列スワップをメモリ上で観察します。</p>
+            <p>隣接要素の比較と一時変数 `temp` による配列スワップを観察します。</p>
           </div>
-          <button class="btn-primary btn-load-ex" data-ex="bubble_sort">演習5を読み込む</button>
+          <button class="btn-primary btn-load-ex" data-ex="bubble_sort">読み込む</button>
         </div>
 
         <div class="exercise-card">
@@ -382,7 +601,7 @@ func main() int32 {
             <h3>演習 6: XOR データ暗号化と復号 <span class="badge-sm" style="background: rgba(250,179,135,0.2); color: #fab387;">中上級</span></h3>
             <p>ビット演算 `^` の可逆性と暗号データ変化のステップ追跡です。</p>
           </div>
-          <button class="btn-primary btn-load-ex" data-ex="xor">演習6を読み込む</button>
+          <button class="btn-primary btn-load-ex" data-ex="xor">読み込む</button>
         </div>
 
         <div class="exercise-card">
@@ -390,7 +609,7 @@ func main() int32 {
             <h3>演習 7: 再帰関数 (フィボナッチ数列) <span class="badge-sm" style="background: rgba(243,139,168,0.2); color: #f38ba8;">上級</span></h3>
             <p>関数の自己呼び出し、コールスタック、スタックフレームの伝搬を学びます。</p>
           </div>
-          <button class="btn-primary btn-load-ex" data-ex="fibonacci">演習7を読み込む</button>
+          <button class="btn-primary btn-load-ex" data-ex="fibonacci">読み込む</button>
         </div>
 
         <div class="exercise-card">
@@ -398,21 +617,21 @@ func main() int32 {
             <h3>演習 8: Web API HTTP レスポンスパース <span class="badge-sm" style="background: rgba(243,139,168,0.2); color: #f38ba8;">上級</span></h3>
             <p>構造体 `struct` のメモリ配置と仮想ネットワークノード通信の連携です。</p>
           </div>
-          <button class="btn-primary btn-load-ex" data-ex="api_parse">演習8を読み込む</button>
+          <button class="btn-primary btn-load-ex" data-ex="api_parse">読み込む</button>
         </div>
 
         <div class="exercise-card highlight-card">
           <div class="ex-info">
-            <h3 style="color: var(--accent-yellow);">🔥 演習 9: Hike Web Studio 自身のセルフコンパイル <span class="badge-sm" style="background: rgba(243,139,168,0.3); color: #f38ba8;">最上級</span></h3>
-            <p>Studio自身をセルフコンパイル＆16MB メモリ確保する究極の構造です。</p>
+            <h3 style="color: var(--accent-yellow);">演習 9: セルフコンパイル (Studio自身) <span class="badge-sm" style="background: rgba(243,139,168,0.3); color: #f38ba8;">最上級</span></h3>
+            <p>Studioエンジン自身のコンパイルと大容量メモリ管理を検証します。</p>
           </div>
-          <button class="btn-success btn-load-ex" data-ex="self_host">演習9 (Studio自身) を読み込む</button>
+          <button class="btn-success btn-load-ex" data-ex="self_host">読み込む</button>
         </div>
 
         <!-- 例題解説 & 教材活用ガイド リンクバナー (例題リストの最下部に配置) -->
         <div style="margin-top: 20px; background: rgba(137, 180, 250, 0.1); border: 1px solid var(--accent-blue); padding: 14px; border-radius: 8px; text-align: center;">
-          <div style="font-size: 0.85rem; color: var(--text-main); margin-bottom: 8px; font-weight: 600;">各演習の詳しい狙い・メモリ解説・学習のポイントはこちら:</div>
-          <a href="examples.html" target="_blank" rel="noopener noreferrer" class="btn-manual" style="display: inline-block; padding: 8px 18px; font-weight: 600; text-decoration: none; font-size: 0.85rem; background: var(--accent-blue); color: #11111b; border-radius: 6px;">📖 例題解説 & 教材活用ガイドを開く →</a>
+          <div style="font-size: 0.85rem; color: var(--text-main); margin-bottom: 8px; font-weight: 600;">詳しい解説や学習ガイド:</div>
+          <a href="examples.html" target="_blank" rel="noopener noreferrer" class="btn-manual" style="display: inline-block; padding: 8px 18px; font-weight: 600; text-decoration: none; font-size: 0.85rem; background: var(--accent-blue); color: #11111b; border-radius: 6px;">教材ガイドを開く →</a>
         </div>
       </div>
     </div>
