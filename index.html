@@ -72,6 +72,13 @@
       <label><input type="checkbox" class="mod-check" value="crypto"> Crypto</label>
     </div>
     <div class="adv-group">
+      <span class="adv-title" data-i18n="adv_compiler_pipeline">🏗️ コンパイラ・パイプライン:</span>
+      <select id="selectCompilerBackend" class="btn-sm" style="background: var(--bg-sub); color: var(--text-main); border: 1px solid var(--border-color); font-weight: 600; cursor: pointer; padding: 2px 6px; font-size: 0.76rem;" title="Hike コンパイラのバックエンド パイプラインを選択">
+        <option value="wabt" selected data-i18n="opt_backend_wabt">🏔️ WAT/WABT 直結 (構造化HIR・1対1高精度デバッグ推奨)</option>
+        <option value="llvm" data-i18n="opt_backend_llvm">⚡ LLVM IR パイプライン (-O3 最適化)</option>
+      </select>
+    </div>
+    <div class="adv-group">
       <span class="adv-title" data-i18n="adv_compiler_flags">⚙️ フラグ & 安全制御:</span>
       <label><input type="checkbox" id="chkDebugFlag" checked> <code>-g</code></label>
       <label><input type="checkbox" id="chkOptFlag" checked> <code>-O3</code></label>
@@ -98,12 +105,13 @@
           <div class="debug-toolbar nav-inline-group">
             <button id="btnSaveHike" class="btn-dbg" title="Hike ソースコード (.hike) を保存/ダウンロード" data-i18n="btn_save_hike">💾 保存</button>
             <button id="btnCompileEditor" class="btn-dbg" style="border-color: var(--accent-blue); color: var(--accent-blue); font-weight: 600;" title="Hike コードをコンパイル (LLVM IR & WASM を更新)" data-i18n="btn_build">⚡ ビルド</button>
-            <button id="btnMarkerToggle" class="btn-dbg active-marker-btn" style="border-color: #3b82f6; color: #3b82f6; font-weight: 600;" title="非実行時にコード選択で対応するLLVM/WASM箇所を薄青マーカー表示">🖊️ マーカー</button>
+            <button id="btnMarkerToggle" class="btn-dbg active-marker-btn on" style="border-color: #3b82f6; color: #3b82f6; font-weight: 600;" title="非実行時にコード選択で対応するLLVM/WASM箇所を薄青マーカー表示">🖊️ マーカー</button>
             <button id="btnDebugStart" class="btn-dbg" title="デバッグ実行を開始" data-i18n="dbg_start">▶️ 開始</button>
             <button id="btnDebugNext" class="btn-dbg" disabled title="1行進む (F10)" data-i18n="dbg_next">⏭️ 次</button>
             <button id="btnDebugAutoStep" class="btn-dbg" title="2秒ごとに自動で1行ステップ実行 (再度クリックで一時停止)">⏯️ 自動</button>
             <button id="btnDebugContinue" class="btn-dbg btn-dbg-continue" disabled title="次のブレークポイントまでスキップ (F5)" data-i18n="dbg_continue">⏩ スキップ</button>
             <button id="btnDebugReset" class="btn-dbg" disabled title="デバッグ実行をリセット" data-i18n="dbg_reset">🔄 リセット</button>
+            <span id="backendBadge" class="status-tag" style="background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid #10b981;" title="WAT/WABT 直結パイプライン稼働中: ソース行とWasm命令が1対1完全同期">WAT/WABT 1:1</span>
             <span id="debugStepBadge" class="status-tag">Stopped</span>
           </div>
           <button class="btn-more-menu hidden" title="操作メニュー">⋮</button>

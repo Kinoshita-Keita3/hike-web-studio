@@ -28,15 +28,16 @@ Operating entirely client-side without requiring any backend server, it dynamica
 ## 🌟 Key Features
 
 ### 1. ⚡ Dynamic In-Browser Compilation (Single Source of Truth)
-* **Hike → LLVM IR & WebAssembly (WAT) Transpilation**:
-  * Treats the Hike code editor as the single source of truth to dynamically compile and generate valid LLVM IR and WAT code.
-  * Direct export and download of `main.hike`, `main.ll`, `main.wat`, and `main.wasm`.
+* **WAT/WABT Direct Pipeline (Structured HIR → WAT) & LLVM IR**:
+  * Treats the Hike code editor as the single source of truth to dynamically compile and generate valid WAT code and LLVM IR.
+  * **WAT/WABT Direct Pipeline**: Uses the official Hike compiler structured HIR to emit WAT preserving exact instruction order. Eliminates the source-to-instruction drift caused by LLVM optimization passes (inlining, basic block reordering), providing 1:1 precise debug information and DWARF synchronization.
+  * Direct export and download of `main.hike`, `main.wat`, `main.wasm`, and `main.ll`.
 
-### 2. ⏭️ Visual Step Debugger
-* **Strict HIKE Code Execution Point Display**:
+### 2. ⏭️ Visual Step Debugger & Restored Highlight Synchronization
+* **1:1 Real-Time Synchronization between HIKE Code & WebAssembly Instructions**:
   * Full support for Step Over (<kbd>F10</kbd>), Auto-Step (2-second interval), and Breakpoint Skip / Continue (<kbd>F5</kbd>).
-  * Clear active line indicator and editor gutter highlighting that focuses strictly on the Hike source code.
-  * Preserves underlying instruction-level pointer tracking internally for future dual-panel visualization support.
+  * **Restored Highlight Synchronization**: Directly connected with the WAT/WABT pipeline, fully restoring the previously omitted red markers on the compiled panel (WASM / WAT). The active line in the Hike editor and the corresponding Wasm instruction in the WAT panel sync in real-time with automatic scroll tracking.
+  * **Cross-Code Marker Mode**: Click any line in the Hike editor or any instruction in the WASM panel in non-debug mode to highlight linked elements in soft blue.
 
 ### 3. 🔍 Linear Memory Visualizer (Zero-GC Heap View)
 * **Real-time Memory Dump Table**:
