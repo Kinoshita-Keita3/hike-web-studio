@@ -2218,6 +2218,7 @@ function renderDebugStep(stepIndex) {
     const lineLabel = currentLang === 'ja' ? '実行行' : 'Line';
     const bpLabel = currentLang === 'ja' ? 'ブレークポイント' : 'Breakpoints';
     const noneText = currentLang === 'ja' ? '(なし)' : '(none)';
+    const bpListStr = Array.from(breakpointsSet).sort((a, b) => a - b).map(n => `Line ${n}`).join(', ');
     let html = `
       <div class="watch-item"><span class="watch-name">${lineLabel}</span><span class="watch-val">Line ${targetHikeLine}</span></div>
       <div class="watch-item"><span class="watch-name">${bpLabel}</span><span class="watch-val" style="color: var(--accent-red);">${bpListStr ? `[${bpListStr}]` : noneText}</span></div>
